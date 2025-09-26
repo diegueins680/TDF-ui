@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -74,21 +74,22 @@ function EditPartyDialog({
 
   type EditForm = z.infer<typeof editSchema>;
 
-  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm<EditForm>({
-    resolver: zodResolver(editSchema),
-    values: party ? {
-      displayName: party.displayName,
-      isOrg: party.isOrg,
-      legalName: party.legalName ?? '',
-      primaryEmail: party.primaryEmail ?? '',
-      primaryPhone: party.primaryPhone ?? '',
-      whatsapp: party.whatsapp ?? '',
-      instagram: party.instagram ?? '',
-      taxId: party.taxId ?? '',
-      emergencyContact: party.emergencyContact ?? '',
-      notes: party.notes ?? '',
-    } : undefined,
-  });
+  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<EditForm>({
+  resolver: zodResolver(editSchema),
+  defaultValues: {
+    displayName: '',
+    isOrg: false,
+    legalName: '',
+    primaryEmail: '',
+    primaryPhone: '',
+    whatsapp: '',
+    instagram: '',
+    taxId: '',
+    emergencyContact: '',
+    notes: '',
+  },
+});
+
 
   React.useEffect(() => {
     // Cuando cambia 'party', refresca los valores
@@ -156,10 +157,23 @@ function EditPartyDialog({
             />
           </Grid>
           <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
-            <FormControlLabel
-              control={<Switch checked={watch('isOrg')} {...register('isOrg')} />}
-              label="¿Es organización?"
-            />
+          <Controller
+            name="isOrg"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={!!field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    inputRef={field.ref}
+                  />
+                }
+                label="¿Es organización?"
+              />
+            )}
+          />
+
           </Grid>
 
           <Grid item xs={12} md={6}><TextField label="Razón social" fullWidth {...register('legalName')} /></Grid>
@@ -275,7 +289,14 @@ export default function PartiesPage() {
       </Paper>
 
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
-      <EditPartyDialog party={editing} open={!!editing} onClose={() => setEditing(null)} />
+      {editing && (
+        <EditPartyDialog
+          key={editing.partyId}    // (optional) forces a clean mount per record
+          party={editing}
+          open
+          onClose={() => setEditing(null)}
+        />
+      )}
     </>
   );
 }
