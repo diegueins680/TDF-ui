@@ -1,5 +1,4 @@
-
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
@@ -8,11 +7,14 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
-  DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, InputAdornment
+  DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, InputAdornment, Switch, FormControlLabel, Grid
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
+
+console.log('PartiesPage — with multi-field edit dialog — loaded');
 
 const createSchema = z.object({
   cDisplayName: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -50,22 +52,151 @@ function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
-function EditPartyDialog({ party, open, onClose }: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+function EditPartyDialog({
+  party, open, onClose
+}: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+
   const qc = useQueryClient();
-  const [instagram, setInstagram] = useState(party?.instagram ?? '');
+
+  // ----- Form & validación -----
+  const editSchema = z.object({
+    displayName: z.string().min(2, 'Mínimo 2 caracteres'),
+    isOrg: z.boolean(),
+    legalName: z.string().optional(),
+    primaryEmail: z.string().email('Email inválido').optional().or(z.literal('')),
+    primaryPhone: z.string().optional(),
+    whatsapp: z.string().optional(),
+    instagram: z.string().optional(),
+    taxId: z.string().optional(),
+    emergencyContact: z.string().optional(),
+    notes: z.string().optional(),
+  });
+
+  type EditForm = z.infer<typeof editSchema>;
+
+  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm<EditForm>({
+    resolver: zodResolver(editSchema),
+    values: party ? {
+      displayName: party.displayName,
+      isOrg: party.isOrg,
+      legalName: party.legalName ?? '',
+      primaryEmail: party.primaryEmail ?? '',
+      primaryPhone: party.primaryPhone ?? '',
+      whatsapp: party.whatsapp ?? '',
+      instagram: party.instagram ?? '',
+      taxId: party.taxId ?? '',
+      emergencyContact: party.emergencyContact ?? '',
+      notes: party.notes ?? '',
+    } : undefined,
+  });
+
+  React.useEffect(() => {
+    // Cuando cambia 'party', refresca los valores
+    if (party) {
+      reset({
+        displayName: party.displayName,
+        isOrg: party.isOrg,
+        legalName: party.legalName ?? '',
+        primaryEmail: party.primaryEmail ?? '',
+        primaryPhone: party.primaryPhone ?? '',
+        whatsapp: party.whatsapp ?? '',
+        instagram: party.instagram ?? '',
+        taxId: party.taxId ?? '',
+        emergencyContact: party.emergencyContact ?? '',
+        notes: party.notes ?? '',
+      });
+    }
+  }, [party, reset]);
+
+  // Convierte '' -> null para campos opcionales
+  const n = (s?: string) => (s && s.trim() !== '' ? s.trim() : null);
+
+  // Construye payload con SOLO cambios
+  const buildUpdate = (orig: PartyDTO, v: EditForm): PartyUpdate => {
+    const out: PartyUpdate = {};
+    if (v.displayName !== orig.displayName) out.uDisplayName = v.displayName.trim();
+    if (v.isOrg !== orig.isOrg)           out.uIsOrg = v.isOrg;
+
+    if (n(v.legalName)        !== (orig.legalName ?? null))        out.uLegalName = n(v.legalName);
+    if (n(v.primaryEmail)     !== (orig.primaryEmail ?? null))     out.uPrimaryEmail = n(v.primaryEmail);
+    if (n(v.primaryPhone)     !== (orig.primaryPhone ?? null))     out.uPrimaryPhone = n(v.primaryPhone);
+    if (n(v.whatsapp)         !== (orig.whatsapp ?? null))         out.uWhatsapp = n(v.whatsapp);
+    if (n(v.instagram)        !== (orig.instagram ?? null))        out.uInstagram = n(v.instagram);
+    if (n(v.taxId)            !== (orig.taxId ?? null))            out.uTaxId = n(v.taxId);
+    if (n(v.emergencyContact) !== (orig.emergencyContact ?? null)) out.uEmergencyContact = n(v.emergencyContact);
+    if (n(v.notes)            !== (orig.notes ?? null))            out.uNotes = n(v.notes);
+    return out;
+  };
+
   const m = useMutation({
     mutationFn: (body: PartyUpdate) => Parties.update(party!.partyId, body),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['parties'] }); onClose(); }
   });
+
+  const onSubmit = (vals: EditForm) => {
+    if (!party) return;
+    const payload = buildUpdate(party, vals);
+    // Si el usuario no cambió nada, no peguemos PUT vacío
+    if (Object.keys(payload).length === 0) { onClose(); return; }
+    m.mutate(payload);
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Editar {party?.displayName}</DialogTitle>
       <DialogContent>
-        <TextField autoFocus margin="dense" label="Instagram" fullWidth value={instagram} onChange={e => setInstagram(e.target.value)} />
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          <Grid item xs={12} md={8}>
+            <TextField
+              label="Nombre / Display"
+              fullWidth
+              {...register('displayName')}
+              error={!!errors.displayName}
+              helperText={errors.displayName?.message}
+            />
+          </Grid>
+          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+            <FormControlLabel
+              control={<Switch checked={watch('isOrg')} {...register('isOrg')} />}
+              label="¿Es organización?"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}><TextField label="Razón social" fullWidth {...register('legalName')} /></Grid>
+          <Grid item xs={12} md={6}><TextField label="RUC / CI" fullWidth {...register('taxId')} /></Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Email"
+              fullWidth
+              {...register('primaryEmail')}
+              error={!!errors.primaryEmail}
+              helperText={errors.primaryEmail?.message}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}><TextField label="Teléfono" fullWidth {...register('primaryPhone')} /></Grid>
+
+          <Grid item xs={12} md={6}><TextField label="WhatsApp" fullWidth {...register('whatsapp')} /></Grid>
+          <Grid item xs={12} md={6}><TextField label="Instagram" fullWidth {...register('instagram')} /></Grid>
+
+          <Grid item xs={12}><TextField label="Contacto de emergencia" fullWidth {...register('emergencyContact')} /></Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Notas"
+              fullWidth
+              multiline
+              minRows={3}
+              {...register('notes')}
+            />
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={() => m.mutate({ uInstagram: instagram })} disabled={m.isPending}>Guardar</Button>
+        <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={m.isPending}>
+          Guardar
+        </Button>
       </DialogActions>
     </Dialog>
   );
