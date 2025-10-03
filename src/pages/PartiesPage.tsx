@@ -1,14 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
+import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey } from '../api/types';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, InputAdornment, Switch, FormControlLabel, Grid
+  TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
+  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
@@ -16,37 +17,174 @@ import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRen
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
+const roleValues = ['Admin','Manager','Engineer','Teacher','Reception','Accounting','Artist','Student','Vendor','ReadOnly','Customer'] as const;
+const ROLE_OPTIONS: { value: RoleKey; label: string }[] = roleValues.map(value => ({ value, label: value }));
+
 const createSchema = z.object({
   cDisplayName: z.string().min(2, 'Mínimo 2 caracteres'),
   cIsOrg: z.boolean().default(false),
+  cLegalName: z.string().optional(),
+  cTaxId: z.string().optional(),
   cPrimaryEmail: z.string().email('Email inválido').optional().or(z.literal('')),
+  cPrimaryPhone: z.string().optional(),
+  cWhatsapp: z.string().optional(),
+  cInstagram: z.string().optional(),
+  cEmergencyContact: z.string().optional(),
+  cNotes: z.string().optional(),
+  cRoles: z.array(z.enum(roleValues)).default([])
 });
+
+type CreateForm = z.infer<typeof createSchema>;
 
 function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
-  const { handleSubmit, register, formState: { errors }, reset } = useForm<PartyCreate>({
+  const { handleSubmit, register, control, formState: { errors }, reset } = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
-    defaultValues: { cDisplayName: '', cIsOrg: false, cPrimaryEmail: '' as any },
+    defaultValues: {
+      cDisplayName: '',
+      cIsOrg: false,
+      cLegalName: '',
+      cTaxId: '',
+      cPrimaryEmail: '',
+      cPrimaryPhone: '',
+      cWhatsapp: '',
+      cInstagram: '',
+      cEmergencyContact: '',
+      cNotes: '',
+      cRoles: [],
+    }
   });
-  const m = useMutation({
-    mutationFn: (body: PartyCreate) => Parties.create({
-      ...body,
-      cPrimaryEmail: body.cPrimaryEmail ? body.cPrimaryEmail : undefined,
-    }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['parties'] }); reset(); onClose(); }
+
+  const normalize = (val?: string | null) => {
+    if (!val) return undefined;
+    const trimmed = val.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  };
+
+  const mutation = useMutation({
+    mutationFn: (body: PartyCreate) => Parties.create(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['parties'] });
+      reset();
+      onClose();
+    }
   });
+
+  const onSubmit = (values: CreateForm) => {
+    const payload: PartyCreate = {
+      cDisplayName: values.cDisplayName.trim(),
+      cIsOrg: values.cIsOrg,
+      cLegalName: normalize(values.cLegalName) ?? null,
+      cTaxId: normalize(values.cTaxId) ?? null,
+      cPrimaryEmail: normalize(values.cPrimaryEmail) ?? null,
+      cPrimaryPhone: normalize(values.cPrimaryPhone) ?? null,
+      cWhatsapp: normalize(values.cWhatsapp) ?? null,
+      cInstagram: normalize(values.cInstagram) ?? null,
+      cEmergencyContact: normalize(values.cEmergencyContact) ?? null,
+      cNotes: normalize(values.cNotes) ?? null,
+    };
+    if (values.cRoles.length > 0) {
+      payload.cRoles = values.cRoles;
+    }
+    mutation.mutate(payload);
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Nueva persona</DialogTitle>
       <DialogContent>
-        <Stack gap={2} sx={{ mt: 1, width: 420 }}>
-          <TextField label="Nombre / Display" {...register('cDisplayName')} error={!!errors.cDisplayName} helperText={errors.cDisplayName?.message} />
-          <TextField label="Email" {...register('cPrimaryEmail')} error={!!errors.cPrimaryEmail} helperText={errors.cPrimaryEmail?.message} />
-        </Stack>
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          <Grid item xs={12} md={8}>
+            <TextField
+              label="Nombre / Display"
+              fullWidth
+              {...register('cDisplayName')}
+              error={!!errors.cDisplayName}
+              helperText={errors.cDisplayName?.message}
+            />
+          </Grid>
+          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+            <Controller
+              name="cIsOrg"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.value}
+                      onChange={(event) => field.onChange(event.target.checked)}
+                      inputRef={field.ref}
+                    />
+                  }
+                  label="¿Es organización?"
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}><TextField label="Razón social" fullWidth {...register('cLegalName')} /></Grid>
+          <Grid item xs={12} md={6}><TextField label="RUC / CI" fullWidth {...register('cTaxId')} /></Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Email"
+              fullWidth
+              {...register('cPrimaryEmail')}
+              error={!!errors.cPrimaryEmail}
+              helperText={errors.cPrimaryEmail?.message}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}><TextField label="Teléfono" fullWidth {...register('cPrimaryPhone')} /></Grid>
+
+          <Grid item xs={12} md={6}><TextField label="WhatsApp" fullWidth {...register('cWhatsapp')} /></Grid>
+          <Grid item xs={12} md={6}><TextField label="Instagram" fullWidth {...register('cInstagram')} /></Grid>
+
+          <Grid item xs={12}><TextField label="Contacto de emergencia" fullWidth {...register('cEmergencyContact')} /></Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Notas"
+              fullWidth
+              multiline
+              minRows={3}
+              {...register('cNotes')}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Controller
+              name="cRoles"
+              control={control}
+              render={({ field }) => (
+                <FormControl fullWidth>
+                  <InputLabel id="roles-label">Roles iniciales</InputLabel>
+                  <Select
+                    labelId="roles-label"
+                    multiple
+                    label="Roles iniciales"
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.target.value as RoleKey[])}
+                    renderValue={(selected) => selected.join(', ')}
+                  >
+                    {ROLE_OPTIONS.map(option => (
+                      <MenuItem key={option.value} value={option.value}>
+                        <Checkbox checked={field.value.includes(option.value)} />
+                        <ListItemText primary={option.label} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.cRoles && <FormHelperText error>{errors.cRoles.message}</FormHelperText>}
+                </FormControl>
+              )}
+            />
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit((vals)=>m.mutate(vals))} variant="contained" disabled={m.isPending}>Crear</Button>
+        <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Creando…' : 'Crear'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -24,6 +24,7 @@ export type PartyCreate = {
   cTaxId?: string | null;
   cEmergencyContact?: string | null;
   cNotes?: string | null;
+  cRoles?: RoleKey[];
 };
 
 export type PartyUpdate = Partial<{
@@ -53,6 +54,19 @@ export type PipelineStage =
   | 'Brief' | 'Prep' | 'v1 Sent' | 'Revisions' | 'Approved' | 'Delivered' // Mixing
   | 'v1' | 'DDP Delivered'; // Mastering extras
 export type PipelineCard = { id: string; title: string; artist?: string; type: PipelineType; stage: string };
+
+export type RoleKey =
+  | 'Admin'
+  | 'Manager'
+  | 'Engineer'
+  | 'Teacher'
+  | 'Reception'
+  | 'Accounting'
+  | 'Artist'
+  | 'Student'
+  | 'Vendor'
+  | 'ReadOnly'
+  | 'Customer';
 
 export type LoginRequest = {
   username: string;
