@@ -53,3 +53,15 @@ export type PipelineStage =
   | 'Brief' | 'Prep' | 'v1 Sent' | 'Revisions' | 'Approved' | 'Delivered' // Mixing
   | 'v1' | 'DDP Delivered'; // Mastering extras
 export type PipelineCard = { id: string; title: string; artist?: string; type: PipelineType; stage: string };
+
+export type LoginRequest = {
+  username: string;
+  password: string;
+};
+
+export type LoginResponse = {
+  token: string;
+  partyId: number;
+  roles: string[];
+  modules: string[];
+};
