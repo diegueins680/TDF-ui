@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 type HeaderProps = {
@@ -8,6 +8,15 @@ type HeaderProps = {
 }
 
 export default function Header({ items, username, onLogout }: HeaderProps) {
+  const [logoReady, setLogoReady] = useState(false)
+  const logoRef = useRef<HTMLImageElement | null>(null)
+
+  useEffect(() => {
+    const node = logoRef.current
+    if (node?.complete && node.naturalWidth > 0) {
+      setLogoReady(true)
+    }
+  }, [])
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('tdf-theme') : null
     const root = document.documentElement
@@ -31,11 +40,20 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
 
   const navClass = ({ isActive }: { isActive: boolean }) => `nav-link${isActive ? ' is-active' : ''}`
 
+  const brandClass = logoReady ? 'brand has-logo' : 'brand is-fallback'
+
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link to="/" className="brand" aria-label="TDF HQ home">
-          <img src="/assets/tdf-ui/tdf_logo.svg" alt="" className="brand-logo" />
+        <Link to="/" className={brandClass} aria-label="TDF HQ home">
+          <img
+            src="/assets/tdf-ui/tdf_logo.svg"
+            alt=""
+            className="brand-logo"
+            ref={logoRef}
+            onLoad={() => setLogoReady(true)}
+            onError={() => setLogoReady(false)}
+          />
           <span className="brand-title">TDF HQ</span>
         </Link>
         <nav className="nav-links" aria-label="Primary">
