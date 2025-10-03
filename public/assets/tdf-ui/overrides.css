@@ -1,38 +1,20 @@
 
-/* TDF: Fix missing header logo + increase contrast */
-:root{ --tdf-logo-size-min:32px; --tdf-logo-size-max:44px; }
+/* === TDF Brand Polish Overrides === */
 
-/* Darker header for contrast */
+/* Header: strong contrast */
 .site-header{
   background:#11131a;
   border-bottom:1px solid rgba(255,255,255,.08);
   backdrop-filter:saturate(160%) blur(10px);
 }
 
-/* Hide any leftover wordmark and keep only the visual mark */
-.brand-title{ display:none !important; }
-
-.site-header .brand{
-  position:relative;
-}
+/* Logo sizing (header) */
 .site-header .brand-logo{
-  inline-size: clamp(var(--tdf-logo-size-min), 2.8vw, var(--tdf-logo-size-max));
-  block-size: clamp(var(--tdf-logo-size-min), 2.8vw, var(--tdf-logo-size-max));
-  display:block;
+  inline-size: clamp(32px, 2.8vw, 44px);
+  block-size: clamp(32px, 2.8vw, 44px);
 }
-.site-header .brand.is-fallback::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  inline-size: clamp(var(--tdf-logo-size-min), 2.8vw, var(--tdf-logo-size-max));
-  block-size: clamp(var(--tdf-logo-size-min), 2.8vw, var(--tdf-logo-size-max));
-  margin:auto;
-  background: url("/assets/tdf-ui/tdf_logo_alt.svg") no-repeat center / contain;
-}
-.site-header .brand.is-fallback .brand-logo{ display:none; }
-.site-header .brand.has-logo::before{ display:none; }
 
-/* High-contrast nav */
+/* Nav contrast */
 .nav-links a{ color:#f5f7ff !important; font-weight:600; opacity:.92 }
 .nav-links a:hover{ opacity:1 }
 .nav-links a[aria-current="page"]{
@@ -41,14 +23,42 @@
   border:1px solid color-mix(in oklab, var(--brand) 54%, transparent);
 }
 
-/* Button contrast (theme toggle + logout) */
-.site-header .btn{ color:#f5f7ff }
-.site-header .btn.btn-outline{ border-color: rgba(255,255,255,.16); }
-.site-header .btn.btn-outline:hover{ background: rgba(255,255,255,.06); }
-
-/* Fallback sr-only (ensure hidden even if tokens.css didn't load) */
-.sr-only{
-  position:absolute !important; width:1px !important; height:1px !important;
-  padding:0 !important; margin:-1px !important; overflow:hidden !important;
-  clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; clip-path:inset(50%) !important;
+/* Buttons: increase visibility on dark header */
+.site-header .btn{ color:#f5f7ff !important; font-weight:600 }
+.site-header .btn.btn-outline{
+  border-color: color-mix(in oklab, white 16%, transparent) !important;
+  background: color-mix(in oklab, white 4%, transparent);
 }
+.site-header .btn.btn-outline:hover{
+  background: color-mix(in oklab, white 10%, transparent) !important;
+  border-color: color-mix(in oklab, white 26%, transparent) !important;
+}
+.site-header .btn.btn-ghost{
+  background: color-mix(in oklab, white 4%, transparent);
+}
+.site-header .btn.btn-ghost:hover{
+  background: color-mix(in oklab, white 10%, transparent);
+}
+
+/* Disabled buttons: make clearly muted but readable */
+button[disabled],
+button[aria-disabled="true"]{
+  opacity:.55 !important;
+  color: #d7dbea !important;
+  border-color: color-mix(in oklab, white 10%, transparent) !important;
+}
+
+/* Footer: use black logo on light background (no background box) */
+.site-footer .brand-logo{
+  inline-size: 24px;
+  block-size: 24px;
+}
+.site-footer .brand img.brand-logo{
+  content: url("/assets/tdf-ui/tdf_logo_black.svg");
+}
+
+/* Safety: hide any leftover visible wordmark in header */
+.brand-title{ display:none !important; }
+
+/* Favicon helper (if you want to apply purely via CSS-injected link, skip) */
+/* . Use /assets/tdf-ui/tdf_isotype.svg in your <head> */

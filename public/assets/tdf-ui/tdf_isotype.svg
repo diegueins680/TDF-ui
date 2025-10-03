@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .ring { fill: none; stroke: #000; stroke-width: 88; }
+    </style>
+  </defs>
+  <circle cx="256" cy="256" r="164" class="ring"/>
+</svg>
