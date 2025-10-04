@@ -1,47 +1,76 @@
 
-/* --- TDF: Header/ Footer Logo + Favicon Update (Overrides) --- */
+/* === TDF Brand Hotfix v3 ===
+   Goals:
+   1) Header logo visible and bigger (48–56px) on dark header.
+   2) Footer logo in black, transparent background, slightly bigger (28–32px).
+   3) Hide any stray "TDF HQ/TDF Records" text or wrong <img> in brand areas.
+   4) Improve header contrast and button legibility.
+------------------------------------------------------------------- */
 
+/* Header styling + contrast */
 .site-header{
-  background:#11131a;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#0f1117; /* slightly darker */
+  border-bottom:1px solid rgba(255,255,255,.10);
   backdrop-filter:saturate(160%) blur(10px);
 }
 
-/* Force a visible white logo in the header regardless of markup */
-.site-header .brand{ position:relative; display:inline-flex; align-items:center; gap:.75rem }
-.site-header .brand .brand-logo{ display:none !important; } /* hide any conflicting <img> */
+/* Brand area: nuke visible text and any imgs, then paint the correct logo */
+.site-header .brand{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  font-size:0 !important;        /* hides text nodes */
+  color:transparent !important;  /* belt & suspenders */
+}
+.site-header .brand > *{ display:none !important; }     /* hides existing spans/imgs */
 .site-header .brand::before{
   content:"";
-  inline-size: clamp(32px, 2.8vw, 44px);
-  block-size: clamp(32px, 2.8vw, 44px);
-  background: url("/assets/tdf-ui/tdf_logo_white.svg") no-repeat center / contain;
+  inline-size: clamp(48px, 3.8vw, 56px);
+  block-size: clamp(48px, 3.8vw, 56px);
   display:inline-block;
+  background: url("/assets/tdf-ui/tdf_logo_white.svg?v=3") no-repeat center / contain;
 }
 
-/* Typography color in header */
-.nav-links a{ color:#f5f7ff !important; font-weight:600; opacity:.92 }
+/* Nav items + active pill contrast */
+.nav-links a{ color:#f5f7ff !important; font-weight:600; opacity:.95 }
 .nav-links a:hover{ opacity:1 }
 .nav-links a[aria-current="page"]{
-  color:#fff !important;
-  background: color-mix(in oklab, var(--brand) 28%, transparent);
-  border:1px solid color-mix(in oklab, var(--brand) 54%, transparent);
+  color:#ffffff !important;
+  background: color-mix(in oklab, var(--brand) 32%, transparent);
+  border:1px solid color-mix(in oklab, var(--brand) 56%, transparent);
 }
 
-/* Footer: force black logo with transparent bg */
-.site-footer .brand{ display:flex; align-items:center; gap:.75rem }
-.site-footer .brand .brand-logo{ display:none !important; }
+/* Header buttons */
+.site-header .btn{ color:#f5f7ff !important; font-weight:600 }
+.site-header .btn.btn-outline{
+  border-color: color-mix(in oklab, white 18%, transparent) !important;
+  background: color-mix(in oklab, white 6%, transparent);
+}
+.site-header .btn.btn-outline:hover{
+  background: color-mix(in oklab, white 12%, transparent) !important;
+  border-color: color-mix(in oklab, white 28%, transparent) !important;
+}
+
+/* Footer brand: hide any provided image/text and paint black transparent logo */
+.site-footer .brand{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  font-size:0 !important;
+  color:transparent !important;
+}
+.site-footer .brand > *{ display:none !important; }
 .site-footer .brand::before{
   content:"";
-  inline-size: 24px;
-  block-size: 24px;
-  background: url("/assets/tdf-ui/tdf_logo_black.svg") no-repeat center / contain;
+  inline-size: clamp(28px, 2.4vw, 32px);
+  block-size: clamp(28px, 2.4vw, 32px);
   display:inline-block;
+  background: url("/assets/tdf-ui/tdf_logo_black.svg?v=3") no-repeat center / contain;
 }
 
-/* Hide any leftover visible wordmark */
-.brand-title{ display:none !important; }
-
-/* Ensure sr-only utility exists */
+/* Keep accessibility text available when present */
 .sr-only{
   position:absolute !important; width:1px !important; height:1px !important;
   padding:0 !important; margin:-1px !important; overflow:hidden !important;
