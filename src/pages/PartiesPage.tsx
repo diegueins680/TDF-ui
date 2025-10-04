@@ -6,14 +6,16 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
+  Alert, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
-  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText
+  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
+import { Bookings } from '../api/bookings';
+import { Invoices } from '../api/invoices';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
@@ -190,6 +192,154 @@ function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+function PartyDetailDialog({
+  party, open, onClose
+}: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+  const [tab, setTab] = useState<'overview' | 'bookings' | 'packages' | 'invoices'>('overview');
+
+  useEffect(() => {
+    if (open) {
+      setTab('overview');
+    }
+  }, [open, party?.partyId]);
+
+  const partyId = party?.partyId ?? null;
+
+  const bookingsQuery = useQuery({
+    queryKey: ['party-bookings', partyId],
+    queryFn: () => (partyId ? Bookings.listByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'bookings' && !!partyId,
+  });
+
+  const invoicesQuery = useQuery({
+    queryKey: ['party-invoices', partyId],
+    queryFn: () => (partyId ? Invoices.listByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'invoices' && !!partyId,
+  });
+
+  const formatDate = (value: string) => new Date(value).toLocaleString();
+  const formatCurrency = (cents: number) => (cents / 100).toLocaleString('es-EC', { style: 'currency', currency: 'USD' });
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{party?.displayName ?? 'Detalle'}</DialogTitle>
+      <DialogContent dividers>
+        <Tabs value={tab} onChange={(_event, value) => setTab(value)} sx={{ mb: 2 }}>
+          <Tab label="Resumen" value="overview" />
+          <Tab label="Bookings" value="bookings" />
+          <Tab label="Paquetes" value="packages" />
+          <Tab label="Facturas" value="invoices" />
+        </Tabs>
+        {tab === 'overview' && (
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip label={party?.isOrg ? 'Organización' : 'Persona'} color={party?.isOrg ? 'primary' : 'default'} size="small" />
+              <Typography variant="body2" color="text.secondary">ID #{party?.partyId}</Typography>
+            </Stack>
+            <Divider />
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">Contacto</Typography>
+              <Typography variant="body2">Correo: {party?.primaryEmail ?? '—'}</Typography>
+              <Typography variant="body2">Teléfono: {party?.primaryPhone ?? '—'}</Typography>
+              <Typography variant="body2">WhatsApp: {party?.whatsapp ?? '—'}</Typography>
+              <Typography variant="body2">Instagram: {party?.instagram ?? '—'}</Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">Información adicional</Typography>
+              <Typography variant="body2">Razón social: {party?.legalName ?? '—'}</Typography>
+              <Typography variant="body2">RUC / CI: {party?.taxId ?? '—'}</Typography>
+              <Typography variant="body2">Contacto de emergencia: {party?.emergencyContact ?? '—'}</Typography>
+              <Typography variant="body2">Notas: {party?.notes ?? '—'}</Typography>
+            </Stack>
+          </Stack>
+        )}
+        {tab === 'bookings' && (
+          <Stack spacing={2}>
+            {bookingsQuery.isPending && <CircularProgress size={24} sx={{ alignSelf: 'center' }} />}
+            {bookingsQuery.isError && (
+              <Alert severity="error">{(bookingsQuery.error as Error).message}</Alert>
+            )}
+            {!bookingsQuery.isPending && !bookingsQuery.isError && (
+              bookingsQuery.data && bookingsQuery.data.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Título</TableCell>
+                        <TableCell>Inicio</TableCell>
+                        <TableCell>Fin</TableCell>
+                        <TableCell>Estado</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {bookingsQuery.data.map(booking => (
+                        <TableRow key={booking.bookingId}>
+                          <TableCell>{booking.title}</TableCell>
+                          <TableCell>{formatDate(booking.startsAt)}</TableCell>
+                          <TableCell>{formatDate(booking.endsAt)}</TableCell>
+                          <TableCell>{booking.status}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No hay bookings asociados a este contacto todavía.
+                </Typography>
+              )
+            )}
+          </Stack>
+        )}
+        {tab === 'packages' && (
+          <Typography variant="body2" color="text.secondary">
+            El historial de paquetes estará disponible cuando el backend exponga `/packages/purchases` con filtros por cliente.
+          </Typography>
+        )}
+        {tab === 'invoices' && (
+          <Stack spacing={2}>
+            {invoicesQuery.isPending && <CircularProgress size={24} sx={{ alignSelf: 'center' }} />}
+            {invoicesQuery.isError && (
+              <Alert severity="error">{(invoicesQuery.error as Error).message}</Alert>
+            )}
+            {!invoicesQuery.isPending && !invoicesQuery.isError && (
+              invoicesQuery.data && invoicesQuery.data.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Número</TableCell>
+                        <TableCell>Total</TableCell>
+                        <TableCell>Estado</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {invoicesQuery.data.map(invoice => (
+                        <TableRow key={invoice.invId}>
+                          <TableCell>{invoice.number ?? invoice.invId}</TableCell>
+                          <TableCell>{formatCurrency(invoice.totalC)}</TableCell>
+                          <TableCell>{invoice.statusI}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Aún no registramos facturas para este contacto.
+                </Typography>
+              )
+            )}
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cerrar</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 function EditPartyDialog({
   party, open, onClose
 }: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
@@ -358,6 +508,7 @@ export default function PartiesPage() {
   const { data = [], isLoading, error } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
+  const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
@@ -367,7 +518,14 @@ export default function PartiesPage() {
     { header: 'Instagram', accessorKey: 'instagram' },
     {
       header: 'Acciones', cell: ({ row }) => (
-        <IconButton onClick={() => setEditing(row.original)}><EditIcon /></IconButton>
+        <IconButton
+          onClick={(event) => {
+            event.stopPropagation();
+            setEditing(row.original);
+          }}
+        >
+          <EditIcon />
+        </IconButton>
       )
     }
   ], []);
@@ -413,7 +571,7 @@ export default function PartiesPage() {
             </TableHead>
             <TableBody>
               {table.getRowModel().rows.map(r => (
-                <TableRow key={r.id} hover>
+                <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
                   {r.getVisibleCells().map(c => (
                     <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
                   ))}
@@ -434,6 +592,9 @@ export default function PartiesPage() {
           open
           onClose={() => setEditing(null)}
         />
+      )}
+      {detail && (
+        <PartyDetailDialog party={detail} open onClose={() => setDetail(null)} />
       )}
     </>
   );

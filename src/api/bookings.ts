@@ -12,5 +12,17 @@ export type CreateBookingReq = {
 
 export const Bookings = {
   list: () => get<BookingDTO[]>('/bookings'),
+  listByParty: async (partyId: number) => {
+    const params = new URLSearchParams({ partyId: String(partyId) });
+    try {
+      return await get<BookingDTO[]>(`/bookings?${params.toString()}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error ?? '');
+      if (message.includes('404')) {
+        return [];
+      }
+      throw error;
+    }
+  },
   create: (body: CreateBookingReq) => post<BookingDTO>('/bookings', body),
 };

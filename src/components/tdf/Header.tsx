@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
+type HeaderNavItem = {
+  to: string
+  label: string
+  disabled?: boolean
+  tooltip?: string
+}
+
 type HeaderProps = {
-  items: Array<{ to: string; label: string }>
+  items: HeaderNavItem[]
   username?: string
   onLogout?: () => void
 }
@@ -47,7 +54,7 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
       <div className="container navbar">
         <Link to="/" className={brandClass} aria-label="TDF HQ home">
           <img
-            src="/assets/tdf-ui/tdf_logo.svg"
+            src="/assets/tdf-ui/tdf_logo_white.svg?v=3"
             alt=""
             className="brand-logo"
             ref={logoRef}
@@ -58,9 +65,15 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
         </Link>
         <nav className="nav-links" aria-label="Primary">
           {items.map(item => (
-            <NavLink key={item.to} to={item.to} className={navClass}>
-              {item.label}
-            </NavLink>
+            item.disabled ? (
+              <span key={item.to} className="nav-link is-disabled" title={item.tooltip} aria-disabled="true">
+                {item.label}
+              </span>
+            ) : (
+              <NavLink key={item.to} to={item.to} className={navClass} title={item.tooltip ?? undefined}>
+                {item.label}
+              </NavLink>
+            )
           ))}
         </nav>
         <div className="nav-actions">

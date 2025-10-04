@@ -47,6 +47,8 @@ export type BookingDTO = {
   endsAt: string;   // ISO
   status: string;
   notes?: string | null;
+  partyId?: number | null;
+  serviceOrderId?: number | null;
 };
 
 export type PipelineType = 'Mixing' | 'Mastering';
@@ -78,4 +80,123 @@ export type LoginResponse = {
   partyId: number;
   roles: string[];
   modules: string[];
+};
+
+export type Page<T> = {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export type RoomDTO = {
+  roomId: string;
+  rName: string;
+  rBookable: boolean;
+};
+
+export type RoomCreate = {
+  rcName: string;
+};
+
+export type RoomUpdate = Partial<{
+  ruName: string;
+  ruIsBookable: boolean;
+}>;
+
+export type SessionDTO = {
+  sessionId: string;
+  sStartAt: string;
+  sEndAt: string;
+  sStatus: string;
+};
+
+export type SessionCreate = {
+  scBookingRef?: string | null;
+  scStartAt: string;
+  scEndAt: string;
+  scEngineerRef: string;
+  scRoomIds: string[];
+};
+
+export type SessionUpdate = Partial<{
+  suStatus: string;
+  suNotes: string | null;
+}>;
+
+export type AssetDTO = {
+  assetId: string;
+  name: string;
+  category: string;
+  status: string;
+  location?: string | null;
+};
+
+export type AssetCreate = {
+  cName: string;
+  cCategory: string;
+};
+
+export type AssetUpdate = Partial<{
+  uName: string;
+  uCategory: string;
+  uStatus: string;
+  uLocationId: string | null;
+  uNotes: string | null;
+}>;
+
+export type InvoiceDTO = {
+  invId: number;
+  number?: string | null;
+  statusI: string;
+  subtotalC: number;
+  taxC: number;
+  totalC: number;
+  customerId?: number;
+};
+
+export type CreateInvoiceReq = {
+  ciCustomerId: number;
+  ciSubtotalCents: number;
+  ciTaxCents: number;
+  ciTotalCents: number;
+  ciNumber?: string | null;
+};
+
+export type PackageProductDTO = {
+  ppId: number;
+  ppName: string;
+  ppService: string;
+  ppUnitsKind: string;
+  ppUnitsQty: number;
+  ppPriceCents: number;
+};
+
+export type PackagePurchaseReq = {
+  buyerId: number;
+  productId: number;
+};
+
+export type PackageProductCreate = {
+  name: string;
+  serviceKind: string;
+  unitsKind: string;
+  unitsQty: number;
+  priceCents: number;
+  taxBps?: number;
+  active?: boolean;
+};
+
+export type PackageProductUpdate = Partial<PackageProductCreate> & {
+  active?: boolean;
+};
+
+export type AuditLogEntry = {
+  auditId?: string;
+  actorId?: number | null;
+  entity: string;
+  entityId: string;
+  action: string;
+  diff?: string | null;
+  createdAt: string;
 };
