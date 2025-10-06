@@ -36,7 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sessions } from '../api/sessions';
 import { Rooms } from '../api/rooms';
-import type { Page, RoomDTO, SessionCreate, SessionDTO, SessionInputRowPayload, SessionUpdate } from '../api/types';
+import type { BandChoiceDTO, Page, RoomDTO, SessionCreate, SessionDTO, SessionInputRowPayload, SessionUpdate } from '../api/types';
 
 const STATUS_OPTIONS: Array<{ value: string; label: string; color: 'default' | 'success' | 'warning' | 'info' | 'error' }> = [
   { value: 'InPrep', label: 'En preparación', color: 'info' },
@@ -308,10 +308,12 @@ type SessionFormFieldsProps = {
   control: Control<SessionFormValues>;
   errors: FieldErrors<SessionFormValues>;
   rooms: RoomDTO[];
+  bandChoices: BandChoiceDTO[];
+  bandChoicesLoading?: boolean;
   showStatus?: boolean;
 };
 
-function SessionFormFields({ control, errors, rooms, showStatus = false }: SessionFormFieldsProps) {
+function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoading = false, showStatus = false }: SessionFormFieldsProps) {
   const { fields, append, remove } = useFieldArray({ control, name: 'inputListRows' });
 
   return (
@@ -361,10 +363,32 @@ function SessionFormFields({ control, errors, rooms, showStatus = false }: Sessi
           render={({ field }) => (
             <TextField
               {...field}
-              label="Banda (ID)"
-              placeholder="band-uuid"
+              value={field.value ?? ''}
+              select
+              label="Banda"
+              placeholder="Selecciona una banda"
+              SelectProps={{ displayEmpty: true }}
+              error={!!errors.bandId}
+              helperText={
+                errors.bandId?.message
+                  ?? (bandChoicesLoading
+                    ? 'Cargando bandas…'
+                    : bandChoices.length === 0
+                      ? 'No hay bandas registradas'
+                      : undefined)
+              }
+              disabled={bandChoicesLoading && bandChoices.length === 0}
               fullWidth
-            />
+            >
+              <MenuItem value="">
+                <em>Sin banda</em>
+              </MenuItem>
+              {bandChoices.map((band) => (
+                <MenuItem key={band.bandId} value={band.bandId}>
+                  {band.name}
+                </MenuItem>
+              ))}
+            </TextField>
           )}
         />
         <Controller
@@ -719,7 +743,19 @@ function SessionFormFields({ control, errors, rooms, showStatus = false }: Sessi
   );
 }
 
-function CreateSessionDialog({ open, onClose, rooms }: { open: boolean; onClose: () => void; rooms: RoomDTO[] }) {
+function CreateSessionDialog({
+  open,
+  onClose,
+  rooms,
+  bandChoices,
+  bandChoicesLoading,
+}: {
+  open: boolean;
+  onClose: () => void;
+  rooms: RoomDTO[];
+  bandChoices: BandChoiceDTO[];
+  bandChoicesLoading: boolean;
+}) {
   const qc = useQueryClient();
   const { control, handleSubmit, reset, formState: { errors } } = useForm<SessionFormValues>({
     resolver: zodResolver(sessionSchema),
@@ -751,7 +787,14 @@ function CreateSessionDialog({ open, onClose, rooms }: { open: boolean; onClose:
       <DialogTitle>Nueva sesión</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(submit)}>
         <DialogContent dividers>
-          <SessionFormFields control={control} errors={errors} rooms={rooms} showStatus />
+          <SessionFormFields
+            control={control}
+            errors={errors}
+            rooms={rooms}
+            bandChoices={bandChoices}
+            bandChoicesLoading={bandChoicesLoading}
+            showStatus
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={createMutation.isPending}>Cancelar</Button>
@@ -768,11 +811,15 @@ function EditSessionDialog({
   open,
   onClose,
   rooms,
+  bandChoices,
+  bandChoicesLoading,
   sessionId,
 }: {
   open: boolean;
   onClose: () => void;
   rooms: RoomDTO[];
+  bandChoices: BandChoiceDTO[];
+  bandChoicesLoading: boolean;
   sessionId: string | null;
 }) {
   const qc = useQueryClient();
@@ -825,7 +872,14 @@ function EditSessionDialog({
               <CircularProgress />
             </Box>
           ) : (
-            <SessionFormFields control={control} errors={errors} rooms={rooms} showStatus />
+            <SessionFormFields
+              control={control}
+              errors={errors}
+              rooms={rooms}
+              bandChoices={bandChoices}
+              bandChoicesLoading={bandChoicesLoading}
+              showStatus
+            />
           )}
         </DialogContent>
         <DialogActions>
@@ -863,6 +917,9 @@ export default function SessionsPage() {
 
   const roomsQuery = useQuery({ queryKey: ['rooms', 'for-sessions'], queryFn: Rooms.list });
   const rooms = roomsQuery.data ?? [];
+
+  const sessionOptionsQuery = useQuery({ queryKey: ['sessions', 'options'], queryFn: Sessions.options });
+  const bandChoices = sessionOptionsQuery.data?.bands ?? [];
 
   const roomNamesById = useMemo(() => {
     const map = new Map<string, string>();
@@ -948,8 +1005,21 @@ export default function SessionsPage() {
         />
       </Paper>
 
-      <CreateSessionDialog open={createOpen} onClose={() => setCreateOpen(false)} rooms={rooms} />
-      <EditSessionDialog open={!!editId} onClose={() => setEditId(null)} rooms={rooms} sessionId={editId} />
+      <CreateSessionDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        rooms={rooms}
+        bandChoices={bandChoices}
+        bandChoicesLoading={sessionOptionsQuery.isLoading}
+      />
+      <EditSessionDialog
+        open={!!editId}
+        onClose={() => setEditId(null)}
+        rooms={rooms}
+        bandChoices={bandChoices}
+        bandChoicesLoading={sessionOptionsQuery.isLoading}
+        sessionId={editId}
+      />
     </Stack>
   );
 }

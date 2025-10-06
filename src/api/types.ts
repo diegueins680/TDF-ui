@@ -129,16 +129,16 @@ export type SessionDTO = {
   sBookingRef?: string | null;
   sBandId?: string | null;
   sClientPartyRef?: string | null;
-  sService?: string | null;
-  sEngineerRef?: string | null;
+  sService: string;
+  sEngineerRef: string;
   sAssistantRef?: string | null;
-  sRoomIds?: string[];
+  sRoomIds: string[];
   sSampleRate?: number | null;
   sBitDepth?: number | null;
   sDaw?: string | null;
   sSessionFolderDriveId?: string | null;
   sNotes?: string | null;
-  sInputListRows?: SessionInputRowPayload[];
+  sInputListRows: SessionInputRowPayload[];
 };
 
 export type SessionCreate = {
@@ -178,6 +178,49 @@ export type SessionUpdate = Partial<{
   suInputListRows: SessionInputRowPayload[];
   suStatus: string;
 }>;
+
+export type BandChoiceDTO = {
+  bandId: string;
+  name: string;
+};
+
+export type SessionOptionsDTO = {
+  bands: BandChoiceDTO[];
+};
+
+export type BandMemberDTO = {
+  bmId: string;
+  bmPartyId: number;
+  bmPartyName: string;
+  bmRole?: string | null;
+};
+
+export type BandDTO = {
+  bandId: string;
+  partyId: number;
+  bName: string;
+  bLabelArtist: boolean;
+  bPrimaryGenre?: string | null;
+  bHomeCity?: string | null;
+  bPhotoUrl?: string | null;
+  bContractFlags?: string | null;
+  bMembers: BandMemberDTO[];
+};
+
+export type BandMemberInput = {
+  bmPartyId: number;
+  bmRole?: string | null;
+};
+
+export type BandCreate = {
+  bcName: string;
+  bcLabelArtist?: boolean;
+  bcPrimaryGenre?: string | null;
+  bcHomeCity?: string | null;
+  bcPhotoUrl?: string | null;
+  bcContractFlags?: string | null;
+  bcMembers: BandMemberInput[];
+};
 
 export type AssetDTO = {
   assetId: string;

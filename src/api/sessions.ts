@@ -1,5 +1,5 @@
 import { get, post, patch } from './client';
-import type { Page, SessionCreate, SessionDTO, SessionUpdate } from './types';
+import type { Page, SessionCreate, SessionDTO, SessionOptionsDTO, SessionUpdate } from './types';
 
 export const Sessions = {
   list: (params?: { page?: number; pageSize?: number }) => {
@@ -12,4 +12,5 @@ export const Sessions = {
   create: (body: SessionCreate) => post<SessionDTO>('/sessions', body),
   detail: (id: string) => get<SessionDTO>(`/sessions/${id}`),
   update: (id: string, body: SessionUpdate) => patch<SessionDTO>(`/sessions/${id}`, body),
+  options: () => get<SessionOptionsDTO>('/sessions/options'),
 };

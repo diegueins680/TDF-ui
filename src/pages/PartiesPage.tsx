@@ -1,18 +1,21 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey } from '../api/types';
-import { useForm, Controller } from 'react-hook-form';
+import { Bands } from '../api/bands';
+import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput } from '../api/types';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Alert, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
+  Alert, Box, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
-  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip
+  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
@@ -37,6 +40,24 @@ const createSchema = z.object({
 });
 
 type CreateForm = z.infer<typeof createSchema>;
+
+const bandMemberSchema = z.object({
+  bmPartyId: z
+    .string()
+    .min(1, 'Selecciona un músico')
+    .refine((value) => !Number.isNaN(Number(value)), { message: 'Selecciona un músico válido' }),
+  bmRole: z.string().min(2, 'Describe la responsabilidad'),
+});
+
+const bandSchema = z.object({
+  bcName: z.string().min(2, 'Ingresa un nombre'),
+  bcLabelArtist: z.boolean().default(false),
+  bcPrimaryGenre: z.string().optional(),
+  bcHomeCity: z.string().optional(),
+  bcMembers: z.array(bandMemberSchema).min(1, 'Agrega al menos un integrante'),
+});
+
+type BandForm = z.infer<typeof bandSchema>;
 
 function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
@@ -188,6 +209,209 @@ function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => vo
           {mutation.isPending ? 'Creando…' : 'Crear'}
         </Button>
       </DialogActions>
+    </Dialog>
+  );
+}
+
+function CreateBandDialog({
+  open,
+  onClose,
+  parties,
+}: {
+  open: boolean;
+  onClose: () => void;
+  parties: PartyDTO[];
+}) {
+  const qc = useQueryClient();
+  const musicianOptions = useMemo(() => parties.filter(p => !p.isOrg), [parties]);
+
+  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<BandForm>({
+    resolver: zodResolver(bandSchema),
+    defaultValues: {
+      bcName: '',
+      bcLabelArtist: false,
+      bcPrimaryGenre: '',
+      bcHomeCity: '',
+      bcMembers: [{ bmPartyId: '', bmRole: '' }],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'bcMembers' });
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        bcName: '',
+        bcLabelArtist: false,
+        bcPrimaryGenre: '',
+        bcHomeCity: '',
+        bcMembers: [{ bmPartyId: '', bmRole: '' }],
+      });
+    }
+  }, [open, reset]);
+
+  const normalize = (value?: string) => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
+  };
+
+  const mutation = useMutation({
+    mutationFn: (body: BandCreate) => Bands.create(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bands'] });
+      reset({
+        bcName: '',
+        bcLabelArtist: false,
+        bcPrimaryGenre: '',
+        bcHomeCity: '',
+        bcMembers: [{ bmPartyId: '', bmRole: '' }],
+      });
+      onClose();
+    },
+  });
+
+  const onSubmit = (values: BandForm) => {
+    const members: BandMemberInput[] = values.bcMembers.map(member => ({
+      bmPartyId: Number(member.bmPartyId),
+      bmRole: member.bmRole.trim(),
+    }));
+    const payload: BandCreate = {
+      bcName: values.bcName.trim(),
+      bcLabelArtist: values.bcLabelArtist,
+      bcPrimaryGenre: normalize(values.bcPrimaryGenre) ?? undefined,
+      bcHomeCity: normalize(values.bcHomeCity) ?? undefined,
+      bcMembers: members,
+    };
+    mutation.mutate(payload);
+  };
+
+  const disableSubmit = mutation.isPending || musicianOptions.length === 0;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Nueva banda</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent dividers>
+          {musicianOptions.length === 0 ? (
+            <Alert severity="info">
+              Registra primero músicos en el CRM para poder armar la banda.
+            </Alert>
+          ) : (
+            <Stack spacing={2} sx={{ mt: 0.5 }}>
+              <TextField
+                label="Nombre de la banda"
+                fullWidth
+                {...register('bcName')}
+                error={!!errors.bcName}
+                helperText={errors.bcName?.message}
+              />
+
+              <Controller
+                name="bcLabelArtist"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={field.value}
+                        onChange={(event) => field.onChange(event.target.checked)}
+                        inputRef={field.ref}
+                      />
+                    }
+                    label="¿Firma con sello discográfico?"
+                  />
+                )}
+              />
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <TextField
+                  label="Género principal"
+                  fullWidth
+                  {...register('bcPrimaryGenre')}
+                />
+                <TextField
+                  label="Ciudad base"
+                  fullWidth
+                  {...register('bcHomeCity')}
+                />
+              </Stack>
+
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="subtitle1" fontWeight={600}>Integrantes</Typography>
+                <Button
+                  startIcon={<AddCircleOutlineIcon />}
+                  onClick={() => append({ bmPartyId: '', bmRole: '' })}
+                >
+                  Añadir integrante
+                </Button>
+              </Stack>
+
+              {fields.map((fieldItem, index) => {
+                const memberErrors = errors.bcMembers?.[index];
+                return (
+                  <Paper key={fieldItem.id} variant="outlined" sx={{ p: 2 }}>
+                    <Stack spacing={2}>
+                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                        <Controller
+                          name={`bcMembers.${index}.bmPartyId` as const}
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!memberErrors?.bmPartyId}>
+                              <InputLabel id={`member-${index}-label`}>Músico</InputLabel>
+                              <Select
+                                labelId={`member-${index}-label`}
+                                label="Músico"
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                              >
+                                {musicianOptions.map(option => (
+                                  <MenuItem key={option.partyId} value={String(option.partyId)}>
+                                    {option.displayName}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {memberErrors?.bmPartyId && (
+                                <FormHelperText error>{memberErrors.bmPartyId.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                        <Tooltip title="Eliminar integrante">
+                          <span>
+                            <IconButton
+                              aria-label="Eliminar integrante"
+                              onClick={() => remove(index)}
+                              disabled={fields.length === 1}
+                            >
+                              <DeleteOutlineIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+
+                      <TextField
+                        label="Responsabilidad"
+                        placeholder="Voz, Batería, Guitarra líder..."
+                        fullWidth
+                        {...register(`bcMembers.${index}.bmRole` as const)}
+                        error={!!memberErrors?.bmRole}
+                        helperText={memberErrors?.bmRole?.message}
+                      />
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={mutation.isPending}>Cancelar</Button>
+          <Button type="submit" variant="contained" disabled={disableSubmit}>
+            {mutation.isPending ? 'Creando…' : 'Crear banda'}
+          </Button>
+        </DialogActions>
+      </Box>
     </Dialog>
   );
 }
@@ -507,6 +731,7 @@ function EditPartyDialog({
 export default function PartiesPage() {
   const { data = [], isLoading, error } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
   const [createOpen, setCreateOpen] = useState(false);
+  const [bandOpen, setBandOpen] = useState(false);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
   const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
@@ -547,7 +772,10 @@ export default function PartiesPage() {
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Typography variant="h5">Personas / CRM</Typography>
-        <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+        <Stack direction="row" spacing={1}>
+          <Button variant="outlined" onClick={() => setBandOpen(true)}>Nueva Banda</Button>
+          <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+        </Stack>
       </Stack>
 
       <TextField
@@ -584,6 +812,7 @@ export default function PartiesPage() {
         {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
       </Paper>
 
+      <CreateBandDialog open={bandOpen} onClose={() => setBandOpen(false)} parties={data} />
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       {editing && (
         <EditPartyDialog
