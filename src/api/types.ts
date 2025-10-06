@@ -104,24 +104,79 @@ export type RoomUpdate = Partial<{
   ruIsBookable: boolean;
 }>;
 
+export type SessionInputRowPayload = {
+  channelNumber: number;
+  trackName?: string | null;
+  instrument?: string | null;
+  micId?: string | null;
+  standId?: string | null;
+  cableId?: string | null;
+  preampId?: string | null;
+  insertOutboardId?: string | null;
+  converterChannel?: string | null;
+  phantom?: boolean | null;
+  polarity?: boolean | null;
+  hpf?: boolean | null;
+  pad?: boolean | null;
+  notes?: string | null;
+};
+
 export type SessionDTO = {
   sessionId: string;
   sStartAt: string;
   sEndAt: string;
   sStatus: string;
+  sBookingRef?: string | null;
+  sBandId?: string | null;
+  sClientPartyRef?: string | null;
+  sService?: string | null;
+  sEngineerRef?: string | null;
+  sAssistantRef?: string | null;
+  sRoomIds?: string[];
+  sSampleRate?: number | null;
+  sBitDepth?: number | null;
+  sDaw?: string | null;
+  sSessionFolderDriveId?: string | null;
+  sNotes?: string | null;
+  sInputListRows?: SessionInputRowPayload[];
 };
 
 export type SessionCreate = {
   scBookingRef?: string | null;
+  scBandId?: string | null;
+  scClientPartyRef?: string | null;
+  scService: string;
   scStartAt: string;
   scEndAt: string;
   scEngineerRef: string;
+  scAssistantRef?: string | null;
   scRoomIds: string[];
+  scSampleRate?: number | null;
+  scBitDepth?: number | null;
+  scDaw?: string | null;
+  scSessionFolderDriveId?: string | null;
+  scNotes?: string | null;
+  scInputListRows?: SessionInputRowPayload[];
+  scStatus?: string;
 };
 
 export type SessionUpdate = Partial<{
-  suStatus: string;
+  suBookingRef: string | null;
+  suBandId: string | null;
+  suClientPartyRef: string | null;
+  suService: string;
+  suStartAt: string;
+  suEndAt: string;
+  suEngineerRef: string;
+  suAssistantRef: string | null;
+  suRoomIds: string[];
+  suSampleRate: number | null;
+  suBitDepth: number | null;
+  suDaw: string | null;
+  suSessionFolderDriveId: string | null;
   suNotes: string | null;
+  suInputListRows: SessionInputRowPayload[];
+  suStatus: string;
 }>;
 
 export type AssetDTO = {
