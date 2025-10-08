@@ -61,11 +61,19 @@ export default function LoginPage() {
     <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.100', p: 2 }}>
       <Card sx={{ width: 360 }}>
         <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2 }}>
+            <Box
+              component="img"
+              src="/assets/tdf-ui/tdf_logo_black.svg"
+              alt="TDF Records"
+              sx={{ maxWidth: '12rem', width: '100%', height: 'auto' }}
+            />
+          </Box>
           <Stack component="form" onSubmit={handleSubmit} spacing={2}>
             <Box>
               <Typography variant="h5" fontWeight={700}>Iniciar sesión</Typography>
               <Typography variant="body2" color="text.secondary">
-                Usa tus credenciales o un token emitido por TDF HQ
+                Usa tus credenciales o un token emitido por TDF Records
               </Typography>
             </Box>
             <Tabs

@@ -52,7 +52,7 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link to="/" className={brandClass} aria-label="TDF HQ home">
+        <Link to="/" className={brandClass} aria-label="TDF Records home">
           <img
             src="/assets/tdf-ui/tdf_logo_white.svg?v=3"
             alt=""
@@ -61,7 +61,7 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
             onLoad={() => setLogoReady(true)}
             onError={() => setLogoReady(false)}
           />
-          <span className="brand-title">TDF HQ</span>
+          <span className="brand-title">TDF Records</span>
         </Link>
         <nav className="nav-links" aria-label="Primary">
           {items.map(item => (

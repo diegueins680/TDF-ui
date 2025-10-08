@@ -1,11 +1,10 @@
 
-/* === TDF Brand Hotfix v3 ===
+/* === TDF Brand Refresh ===
    Goals:
-   1) Header logo visible and bigger (48–56px) on dark header.
-   2) Footer logo in black, transparent background, slightly bigger (28–32px).
-   3) Hide any stray "TDF HQ/TDF Records" text or wrong <img> in brand areas.
-   4) Improve header contrast and button legibility.
-------------------------------------------------------------------- */
+   1) Header/footer logos render via <img> with transparent backgrounds.
+   2) Logos scale to 3× their previous size while remaining responsive.
+   3) Preserve improved header contrast and button legibility from prior hotfix.
+------------------------------------------------------------------ */
 
 /* Header styling + contrast */
 .site-header{
@@ -14,22 +13,25 @@
   backdrop-filter:saturate(160%) blur(10px);
 }
 
-/* Brand area: nuke visible text and any imgs, then paint the correct logo */
+/* Header brand: show large transparent logo and visible wordmark */
 .site-header .brand{
   position:relative;
   display:inline-flex;
   align-items:center;
+  gap:1rem;
   white-space:nowrap;
-  font-size:0 !important;        /* hides text nodes */
-  color:transparent !important;  /* belt & suspenders */
+  font-size:inherit !important;
+  color:inherit !important;
 }
-.site-header .brand > *{ display:none !important; }     /* hides existing spans/imgs */
-.site-header .brand::before{
-  content:"";
-  inline-size: clamp(48px, 3.8vw, 56px);
-  block-size: clamp(48px, 3.8vw, 56px);
-  display:inline-block;
-  background: url("/assets/tdf-ui/tdf_logo_white.svg?v=3") no-repeat center / contain;
+.site-header .brand::before{ content:none; }
+.site-header .brand > *{ display:revert !important; }
+.site-header .brand .brand-logo{
+  inline-size:clamp(9rem, 28vw, 18rem);
+  max-inline-size:100%;
+}
+.site-header .brand .brand-title{
+  font-size:clamp(1.25rem, 2.2vw, 1.75rem);
+  letter-spacing:0.12em;
 }
 
 /* Nav items + active pill contrast */
@@ -52,22 +54,26 @@
   border-color: color-mix(in oklab, white 28%, transparent) !important;
 }
 
-/* Footer brand: hide any provided image/text and paint black transparent logo */
+/* Footer brand: mirror header treatment with transparent background */
 .site-footer .brand{
   position:relative;
   display:flex;
   align-items:center;
-  gap:.75rem;
-  font-size:0 !important;
-  color:transparent !important;
+  gap:1.25rem;
+  font-size:inherit !important;
+  color:inherit !important;
 }
-.site-footer .brand > *{ display:none !important; }
-.site-footer .brand::before{
-  content:"";
-  inline-size: clamp(28px, 2.4vw, 32px);
-  block-size: clamp(28px, 2.4vw, 32px);
-  display:inline-block;
-  background: url("/assets/tdf-ui/tdf_logo_black.svg?v=3") no-repeat center / contain;
+.site-footer .brand::before{ content:none; }
+.site-footer .brand > *{ display:revert !important; }
+.site-footer .brand .brand-logo{
+  inline-size:clamp(9rem, 28vw, 18rem);
+  max-inline-size:100%;
+}
+
+@media (max-width: 900px){
+  .site-header .brand .brand-title{
+    display:none;
+  }
 }
 
 /* Keep accessibility text available when present */

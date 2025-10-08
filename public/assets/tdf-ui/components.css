@@ -36,8 +36,10 @@ body {
 
 .brand-logo {
   display: block;
-  inline-size: 6rem;
+  inline-size: clamp(9rem, 28vw, 18rem);
+  max-inline-size: 100%;
   block-size: auto;
+  background: none !important;
 }
 
 .brand-title {
