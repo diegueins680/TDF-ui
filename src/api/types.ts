@@ -298,3 +298,102 @@ export type AuditLogEntry = {
   diff?: string | null;
   createdAt: string;
 };
+
+// Trials -----------------------------------------------------------------
+
+export type PreferredSlotDTO = {
+  startAt: string;
+  endAt: string;
+};
+
+export type TrialRequestCreate = {
+  partyId?: number;
+  subjectId: number;
+  preferred: PreferredSlotDTO[];
+  notes?: string;
+};
+
+export type TrialRequestDTO = {
+  requestId: number;
+  studentName?: string;
+  subjectId: number;
+  subjectName?: string;
+  status: string;
+  preferred?: PreferredSlotDTO[];
+  createdAt?: string;
+  notes?: string | null;
+};
+
+export type TrialAssignPayload = {
+  teacherId: number;
+};
+
+export type TrialSchedulePayload = {
+  requestId: number;
+  teacherId: number;
+  startAt: string;
+  endAt: string;
+  roomId: number;
+};
+
+export type SubjectDTO = {
+  subjectId: number;
+  name: string;
+};
+
+export type PackageDTO = {
+  packageId: number;
+  name: string;
+  hoursQty: number;
+  priceCents: number;
+  expiresDays: number;
+};
+
+export type TrialPurchasePayload = {
+  studentId: number;
+  packageId: number;
+  priceCents: number;
+  discountCents?: number | null;
+  taxCents?: number | null;
+  sellerId?: number | null;
+  commissionedTeacherId?: number | null;
+  trialRequestId?: number | null;
+};
+
+export type PurchaseOutDTO = {
+  purchaseId: number;
+};
+
+export type ClassSessionCreate = {
+  studentId: number;
+  teacherId: number;
+  subjectId: number;
+  startAt: string;
+  endAt: string;
+  roomId: number;
+  bookingId?: number | null;
+};
+
+export type ClassSessionDTO = {
+  classSessionId: number;
+  studentId?: number;
+  teacherId?: number;
+  subjectId?: number;
+  startAt?: string;
+  endAt?: string;
+  roomId?: number;
+  consumedMinutes: number;
+};
+
+export type AttendancePayload = {
+  attended: boolean;
+  notes?: string | null;
+};
+
+export type CommissionDTO = {
+  teacherId: number;
+  amountCents: number;
+  basisCents: number;
+  percent: number;
+};
+
