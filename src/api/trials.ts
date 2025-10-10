@@ -73,8 +73,3 @@ export const Trials = {
   },
 };
 
-export const createTrial = Trials.createTrialRequest;
-export const listTrials = Trials.listTrialRequests;
-export const assignTrial = (requestId: number, teacherId: number) =>
-  Trials.assignTrial(requestId, { teacherId });
-export const scheduleTrial = Trials.scheduleTrial;

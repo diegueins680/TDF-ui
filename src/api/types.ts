@@ -315,6 +315,7 @@ export type TrialRequestCreate = {
 
 export type TrialRequestDTO = {
   requestId: number;
+  studentId?: number;
   studentName?: string;
   subjectId: number;
   subjectName?: string;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -152,6 +152,20 @@ export default function LoginPage() {
             <Button type="submit" variant="contained" size="large" disabled={isLoading}>
               {isLoading ? 'Ingresando…' : mode === 'password' ? 'Ingresar' : 'Conectar token'}
             </Button>
+            <Stack spacing={1} pt={1}>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                ¿No tienes cuenta?{' '}
+                <Box component={Link} to="/signup" sx={{ fontWeight: 600 }} color="primary.main">
+                  Crear cuenta
+                </Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                ¿Buscas una clase de prueba?{' '}
+                <Box component={Link} to="/trial" sx={{ fontWeight: 600 }} color="primary.main">
+                  Solicitar trial
+                </Box>
+              </Typography>
+            </Stack>
           </Stack>
         </CardContent>
       </Card>
