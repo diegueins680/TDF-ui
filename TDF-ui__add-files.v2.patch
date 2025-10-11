@@ -1,6 +1,6 @@
 diff --git a/src/routes/AppRoutes.tsx b/src/routes/AppRoutes.tsx
 new file mode 100644
-index 0000000..9478b4e
+index 0000000000000000000000000000000000000000..3481d53c858f5c44113c7b2cd05c87e90c1891d5 100644
 --- /dev/null
 +++ b/src/routes/AppRoutes.tsx
 @@ -0,0 +1,166 @@
@@ -170,9 +170,10 @@ index 0000000..9478b4e
 +    </Routes>
 +  );
 +}
+
 diff --git a/src/config/menu.ts b/src/config/menu.ts
 new file mode 100644
-index 0000000..e7cc438
+index 0000000000000000000000000000000000000000..758e2ad2eadfa6f99626a2013039c96e2afe6621 100644
 --- /dev/null
 +++ b/src/config/menu.ts
 @@ -0,0 +1,39 @@
@@ -215,9 +216,10 @@ index 0000000..e7cc438
 +  estudiante: ["Inscripción","Pago","Ticket de soporte"],
 +  promotor: ["Evento","Fecha de tour","Venue","Staff"]
 +};
+
 diff --git a/docs/navegacion.md b/docs/navegacion.md
 new file mode 100644
-index 0000000..4a45499
+index 0000000000000000000000000000000000000000..a8571b255e7d96c508edf329a81cc47993d3479c 100644
 --- /dev/null
 +++ b/docs/navegacion.md
 @@ -0,0 +1,28 @@
@@ -249,9 +251,10 @@ index 0000000..4a45499
 +
 +## Móvil
 +Usa un bottom‑nav con tabs para: Inicio, Estudio, Label, Eventos, Escuela; y un menú **Más** para el resto.
+
 diff --git a/public/sitemap.mmd b/public/sitemap.mmd
 new file mode 100644
-index 0000000..6829c48
+index 0000000000000000000000000000000000000000..f269408f4f8e0ed4f7ce86af7e5f7782041443d1 100644
 --- /dev/null
 +++ b/public/sitemap.mmd
 @@ -0,0 +1,67 @@
