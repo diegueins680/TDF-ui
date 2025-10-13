@@ -1,13 +1,7 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { topLevel, submenus, visibilityByRole, Role } from '../config/menu';
-
-type User = { id: string; roles: Role[] };
-
-// TODO: reemplazar por hook/auth real
-function useCurrentUser(): User | null {
-  return { id: 'demo', roles: ['admin'] };
-}
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
+import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
 const MODULE_TO_PATH: Record<string, string> = {
   'Inicio': '/inicio',
@@ -17,14 +11,35 @@ const MODULE_TO_PATH: Record<string, string> = {
   'Eventos': '/eventos',
   'Escuela': '/escuela',
   'Finanzas': '/finanzas',
-  'Operación': '/operacion'
+  'Operación': '/operacion',
+  'Configuración': '/configuracion',
+  'Insights': '/insights'
 };
 
-// Overrides de subrutas con nombres especiales
 const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
-  'Label': { 'Tracks y assets': '/label/tracks' },
   'Estudio': { 'Salas y recursos': '/estudio/salas', 'Órdenes': '/estudio/ordenes' },
-  'Eventos': { 'Fechas y tours': '/eventos/fechas-y-tours', 'Post-mortem': '/eventos/post-mortem' }
+  'Label': { 'Tracks y assets': '/label/tracks' },
+  'Eventos': { 'Fechas y tours': '/eventos/fechas-y-tours', 'Post-mortem': '/eventos/post-mortem' },
+  'Escuela': {
+    'Profesores': '/escuela/profesores',
+    'Clases': '/escuela/clases',
+    'Trial Lessons': '/escuela/trial-lessons',
+    'Trial Queue': '/escuela/trial-queue'
+  },
+  'Finanzas': { 'Regalías': '/finanzas/regalias' },
+  'Operación': {
+    'Reservas de equipo': '/operacion/reservas-equipo',
+    'Paquetes': '/operacion/paquetes'
+  },
+  'Configuración': {
+    'Roles y permisos': '/configuracion/roles-permisos',
+    'Impuestos y series': '/configuracion/impuestos-series',
+    'Unidades de negocio': '/configuracion/unidades-negocio',
+    'Sedes': '/configuracion/sedes',
+    'Marcas': '/configuracion/marcas',
+    'Integraciones': '/configuracion/integraciones',
+    'Preferencias': '/configuracion/preferencias'
+  }
 };
 
 function slugify(label: string) {
@@ -35,61 +50,70 @@ function slugify(label: string) {
     .replace(/^-+|-+$/g, '');
 }
 
-function canSeeModule(user: User, moduleName: string) {
-  const vis = user.roles.flatMap(r => visibilityByRole[r] ?? []);
-  if (vis.includes('*')) return true;
-  const allowModule = vis.some(v => typeof v === 'string' && (v === moduleName || (v as string).startsWith(moduleName + '.')));
-  return allowModule;
+function collectVisibility(roles: Role[]) {
+  return roles.flatMap(role => visibilityByRole[role] ?? []);
 }
 
-function allowedSubmenus(user: User, moduleName: string) {
+function canSeeModule(roles: Role[], moduleName: string) {
+  if (moduleName === 'Inicio') return true;
+  const visibility = collectVisibility(roles);
+  if (visibility.includes('*')) return true;
+  return visibility.some(entry => typeof entry === 'string' && (entry === moduleName || entry.startsWith(`${moduleName}.`)));
+}
+
+function allowedSubmenus(roles: Role[], moduleName: string) {
   const all = submenus[moduleName] || [];
-  const vis = user.roles.flatMap(r => visibilityByRole[r] ?? []);
-  if (vis.includes('*') || vis.includes(moduleName)) return all;
-  const allowedTokens = new Set(
-    vis
-      .filter(v => typeof v === 'string' && (v as string).startsWith(moduleName + '.'))
-      .map(v => (v as string).split('.', 2)[1])
-  );
-  return all.filter(s => allowedTokens.has(s) || allowedTokens.size === 0);
+  if (all.length === 0) return all;
+
+  const visibility = collectVisibility(roles);
+  if (visibility.includes('*') || visibility.includes(moduleName)) {
+    return all;
+  }
+
+  const allowedTokens = visibility
+    .filter(entry => typeof entry === 'string' && entry.startsWith(`${moduleName}.`))
+    .map(entry => entry.split('.', 2)[1]);
+
+  if (allowedTokens.length === 0) {
+    return all;
+  }
+
+  const allowed = new Set(allowedTokens);
+  return all.filter(label => allowed.has(label));
 }
 
 export default function SideNav() {
-  const user = useCurrentUser();
-  const loc = useLocation();
-  if (!user) return null;
+  const { user } = useAuth();
+  const roles = normalizeRoles(user?.roles);
 
   return (
-    <aside style={{ width: 260, borderRight: '1px solid #eee', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {topLevel.map(mod => {
-        const base = MODULE_TO_PATH[mod];
-        if (!base) return null;
-        if (mod !== 'Inicio' && !canSeeModule(user, mod)) return null;
-        const subs = submenus[mod] || [];
+    <aside className="side-nav" aria-label="Áreas principales">
+      {topLevel.map(moduleName => {
+        const basePath = MODULE_TO_PATH[moduleName];
+        if (!basePath) return null;
+        if (!canSeeModule(roles, moduleName)) return null;
+        const subs = allowedSubmenus(roles, moduleName);
 
         return (
-          <div key={mod} style={{ marginBottom: 8 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, textTransform: 'uppercase', margin: '8px 0' }}>
-              <NavLink to={base} style={({ isActive }) => ({ color: isActive ? '#111' : '#333', textDecoration: 'none' })}>
-                {mod}
-              </NavLink>
-            </div>
+          <div key={moduleName} className="side-nav__module">
+            <NavLink
+              to={basePath}
+              className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+            >
+              {moduleName}
+            </NavLink>
             {subs.length > 0 && (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {allowedSubmenus(user, mod).map(sub => {
-                  const override = SUBPATH_OVERRIDES[mod]?.[sub];
-                  const href = override ?? `${base}/${slugify(sub)}`;
+              <ul className="side-nav__submenu">
+                {subs.map(label => {
+                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                  const href = override ?? `${basePath}/${slugify(label)}`;
                   return (
-                    <li key={sub}>
+                    <li key={label}>
                       <NavLink
                         to={href}
-                        style={({ isActive }) => ({
-                          color: isActive ? '#000' : '#555',
-                          textDecoration: 'none',
-                          fontSize: 14
-                        })}
+                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
                       >
-                        {sub}
+                        {label}
                       </NavLink>
                     </li>
                   );

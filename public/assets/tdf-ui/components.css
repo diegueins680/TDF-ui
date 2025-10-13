@@ -123,9 +123,108 @@ body {
   padding: 2rem 0 4rem;
 }
 
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) 1fr;
+  min-height: calc(100vh - 4rem);
+  background: rgba(13, 14, 17, 0.6);
+}
+
+.app-shell__content {
+  padding: 2rem 0 4rem;
+  overflow: hidden;
+}
+
+.app-shell__content > .container {
+  display: grid;
+  gap: 2rem;
+}
+
 .container.stack-lg {
   display: grid;
   gap: 2rem;
+}
+
+.side-nav {
+  position: sticky;
+  top: 4rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 14, 17, 0.92);
+  min-height: calc(100vh - 4rem);
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+.side-nav__module {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.side-nav__module-link {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.side-nav__module-link:hover,
+.side-nav__module-link.is-active {
+  color: var(--text-1);
+}
+
+.side-nav__submenu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.side-nav__sublink {
+  display: block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.6rem;
+  text-decoration: none;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.68);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.side-nav__sublink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.side-nav__sublink.is-active {
+  background: rgba(116, 76, 255, 0.2);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.placeholder {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem 0 2rem;
+}
+
+.placeholder__header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2vw + 1rem, 2.4rem);
+}
+
+.placeholder__body {
+  margin: 0;
+  color: var(--text-2);
+  max-width: 42rem;
 }
 
 .cluster {
@@ -148,4 +247,35 @@ body {
 
 .site-footer a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .side-nav {
+    position: static;
+    min-height: auto;
+    max-height: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .side-nav__module {
+    min-width: max-content;
+  }
+
+  .side-nav__submenu {
+    display: none;
+  }
+
+  .app-shell__content {
+    padding-top: 1.5rem;
+  }
 }
