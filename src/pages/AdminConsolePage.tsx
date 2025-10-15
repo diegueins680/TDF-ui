@@ -21,7 +21,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
-import type { AuditLogEntry } from '../api/types';
+import type { AdminConsoleCard, AuditLogEntry } from '../api/types';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -43,6 +43,12 @@ export default function AdminConsolePage() {
     staleTime: 10_000,
   });
 
+  const consoleQuery = useQuery({
+    queryKey: ['admin', 'console'],
+    queryFn: AdminApi.consolePreview,
+    staleTime: 60_000,
+  });
+
   const seedMutation = useMutation({
     mutationFn: AdminApi.seed,
     onSuccess: () => {
@@ -59,6 +65,18 @@ export default function AdminConsolePage() {
   }, []);
 
   const audits = auditQuery.data ?? [];
+  const fallbackCard: AdminConsoleCard = {
+    cardId: 'user-management',
+    title: 'Gestión de usuarios',
+    body: [
+      'La asignación de roles se administra desde la pantalla de Parties.',
+      'Próximamente aquí se podrá crear usuarios de servicio y tokens API.',
+    ],
+  };
+  const consoleCards: AdminConsoleCard[] = consoleQuery.data?.cards?.length
+    ? consoleQuery.data.cards
+    : [fallbackCard];
+  const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
 
   return (
     <Stack spacing={3}>
@@ -118,16 +136,35 @@ export default function AdminConsolePage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Card variant="outlined">
-            <CardHeader title="Gestión de usuarios" />
-            <CardContent>
-              <Typography variant="body2" color="text.secondary">
-                La asignación de roles se administra desde la pantalla de Parties. Próximamente aquí se podrá crear usuarios de servicio y tokens API.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+        {consoleCards.map((card, index) => (
+          <Grid item xs={12} md={4} key={card.cardId}>
+            <Card variant="outlined">
+              <CardHeader title={card.title} />
+              <CardContent>
+                {card.body.map((paragraph, idx) => (
+                  <Typography
+                    key={`${card.cardId}-line-${idx}`}
+                    variant="body2"
+                    color="text.secondary"
+                    paragraph={idx < card.body.length - 1}
+                  >
+                    {paragraph}
+                  </Typography>
+                ))}
+                {consoleQuery.isFetching && !consoleQuery.isError && (
+                  <Typography variant="caption" color="text.secondary">
+                    {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
+                  </Typography>
+                )}
+                {index === 0 && consoleError && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    No se pudo cargar el panel dinámico. Mostrando información predeterminada. Detalle: {consoleError}
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       <Paper variant="outlined">

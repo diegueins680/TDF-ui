@@ -89,6 +89,17 @@ export type Page<T> = {
   total: number;
 };
 
+export type AdminConsoleCard = {
+  cardId: string;
+  title: string;
+  body: string[];
+};
+
+export type AdminConsoleView = {
+  status: string;
+  cards: AdminConsoleCard[];
+};
+
 export type RoomDTO = {
   roomId: string;
   rName: string;
