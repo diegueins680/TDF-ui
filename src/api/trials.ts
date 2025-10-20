@@ -12,6 +12,7 @@ import type {
   TrialRequestCreate,
   TrialRequestDTO,
   TrialSchedulePayload,
+  TrialTeacherAvailabilityDTO,
 } from './types';
 
 export const Trials = {
@@ -48,6 +49,9 @@ export const Trials = {
   scheduleTrial: (body: TrialSchedulePayload) => post<TrialRequestDTO>('/v1/trial-assignments', body),
 
   listSubjects: () => get<SubjectDTO[]>('/v1/subjects'),
+
+  listTrialAvailability: (subjectId: number) =>
+    get<TrialTeacherAvailabilityDTO[]>(`/v1/trial-availability?subjectId=${subjectId}`),
 
   listPackages: (subjectId?: number) => {
     const params = new URLSearchParams();
