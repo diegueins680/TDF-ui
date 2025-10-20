@@ -9,6 +9,7 @@ import type {
   SubjectDTO,
   TrialAssignPayload,
   TrialPurchasePayload,
+  TrialAvailabilityDTO,
   TrialRequestCreate,
   TrialRequestDTO,
   TrialSchedulePayload,
@@ -48,6 +49,13 @@ export const Trials = {
   scheduleTrial: (body: TrialSchedulePayload) => post<TrialRequestDTO>('/v1/trial-assignments', body),
 
   listSubjects: () => get<SubjectDTO[]>('/v1/subjects'),
+
+  listTrialAvailability: (subjectId: number) => {
+    const params = new URLSearchParams();
+    params.set('subjectId', String(subjectId));
+    const suffix = params.toString() ? `?${params.toString()}` : '';
+    return get<TrialAvailabilityDTO[]>(`/v1/trial-availability${suffix}`);
+  },
 
   listPackages: (subjectId?: number) => {
     const params = new URLSearchParams();

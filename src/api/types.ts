@@ -317,6 +317,14 @@ export type PreferredSlotDTO = {
   endAt: string;
 };
 
+export type TrialAvailabilityDTO = {
+  teacherId: number;
+  teacherName: string;
+  subjectId: number;
+  subjectName?: string;
+  slots: PreferredSlotDTO[];
+};
+
 export type TrialRequestCreate = {
   partyId?: number;
   subjectId: number;
