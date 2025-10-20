@@ -315,6 +315,15 @@ export type AuditLogEntry = {
 export type PreferredSlotDTO = {
   startAt: string;
   endAt: string;
+  teacherId?: number | null;
+  teacherName?: string | null;
+};
+
+export type TrialSlotDTO = {
+  subjectId: number;
+  teacherId: number;
+  teacherName: string;
+  slots: PreferredSlotDTO[];
 };
 
 export type TrialRequestCreate = {
