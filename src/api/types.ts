@@ -322,6 +322,12 @@ export type PreferredSlotDTO = {
 export type TrialTeacherAvailabilityDTO = {
   subjectId: number;
   subjectName?: string;
+  teacherId?: number | null;
+  teacherName?: string | null;
+};
+
+export type TrialSlotDTO = {
+  subjectId: number;
   teacherId: number;
   teacherName: string;
   slots: PreferredSlotDTO[];

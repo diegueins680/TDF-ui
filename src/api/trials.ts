@@ -13,6 +13,7 @@ import type {
   TrialRequestDTO,
   TrialSchedulePayload,
   TrialTeacherAvailabilityDTO,
+  TrialSlotDTO,
 } from './types';
 
 export const Trials = {
@@ -52,6 +53,12 @@ export const Trials = {
 
   listTrialAvailability: (subjectId: number) =>
     get<TrialTeacherAvailabilityDTO[]>(`/v1/trial-availability?subjectId=${subjectId}`),
+  listTrialSlots: (subjectId: number) => {
+    const params = new URLSearchParams();
+    params.set('subjectId', String(subjectId));
+    const suffix = params.toString() ? `?${params.toString()}` : '';
+    return get<TrialSlotDTO[]>(`/v1/trial-slots${suffix}`);
+  },
 
   listPackages: (subjectId?: number) => {
     const params = new URLSearchParams();
