@@ -62,14 +62,15 @@ function isoLocalValue(date: Date) {
   return adjusted.toISOString().slice(0, 16);
 }
 
-function formatSlot(slot?: { startAt: string; endAt: string }) {
+function formatSlot(slot?: { startAt: string; endAt: string; teacherName?: string | null }) {
   if (!slot) return '—';
   const start = new Date(slot.startAt);
   const end = new Date(slot.endAt);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return `${slot.startAt} → ${slot.endAt}`;
   }
-  return `${start.toLocaleString()} → ${end.toLocaleTimeString()}`;
+  const range = `${start.toLocaleString()} → ${end.toLocaleTimeString()}`;
+  return slot.teacherName ? `${range} · ${slot.teacherName}` : range;
 }
 
 export default function TrialLessonsPage() {
