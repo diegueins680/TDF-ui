@@ -1,19 +1,24 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey } from '../api/types';
-import { useForm, Controller } from 'react-hook-form';
+import { Bands } from '../api/bands';
+import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput } from '../api/types';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
+  Alert, Box, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
-  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText
+  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
+import { Bookings } from '../api/bookings';
+import { Invoices } from '../api/invoices';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
@@ -35,6 +40,24 @@ const createSchema = z.object({
 });
 
 type CreateForm = z.infer<typeof createSchema>;
+
+const bandMemberSchema = z.object({
+  bmPartyId: z
+    .string()
+    .min(1, 'Selecciona un músico')
+    .refine((value) => !Number.isNaN(Number(value)), { message: 'Selecciona un músico válido' }),
+  bmRole: z.string().min(2, 'Describe la responsabilidad'),
+});
+
+const bandSchema = z.object({
+  bcName: z.string().min(2, 'Ingresa un nombre'),
+  bcLabelArtist: z.boolean().default(false),
+  bcPrimaryGenre: z.string().optional(),
+  bcHomeCity: z.string().optional(),
+  bcMembers: z.array(bandMemberSchema).min(1, 'Agrega al menos un integrante'),
+});
+
+type BandForm = z.infer<typeof bandSchema>;
 
 function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
@@ -185,6 +208,357 @@ function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => vo
         <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={mutation.isPending}>
           {mutation.isPending ? 'Creando…' : 'Crear'}
         </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function CreateBandDialog({
+  open,
+  onClose,
+  parties,
+}: {
+  open: boolean;
+  onClose: () => void;
+  parties: PartyDTO[];
+}) {
+  const qc = useQueryClient();
+  const musicianOptions = useMemo(() => parties.filter(p => !p.isOrg), [parties]);
+
+  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<BandForm>({
+    resolver: zodResolver(bandSchema),
+    defaultValues: {
+      bcName: '',
+      bcLabelArtist: false,
+      bcPrimaryGenre: '',
+      bcHomeCity: '',
+      bcMembers: [{ bmPartyId: '', bmRole: '' }],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'bcMembers' });
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        bcName: '',
+        bcLabelArtist: false,
+        bcPrimaryGenre: '',
+        bcHomeCity: '',
+        bcMembers: [{ bmPartyId: '', bmRole: '' }],
+      });
+    }
+  }, [open, reset]);
+
+  const normalize = (value?: string) => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
+  };
+
+  const mutation = useMutation({
+    mutationFn: (body: BandCreate) => Bands.create(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bands'] });
+      reset({
+        bcName: '',
+        bcLabelArtist: false,
+        bcPrimaryGenre: '',
+        bcHomeCity: '',
+        bcMembers: [{ bmPartyId: '', bmRole: '' }],
+      });
+      onClose();
+    },
+  });
+
+  const onSubmit = (values: BandForm) => {
+    const members: BandMemberInput[] = values.bcMembers.map(member => ({
+      bmPartyId: Number(member.bmPartyId),
+      bmRole: member.bmRole.trim(),
+    }));
+    const payload: BandCreate = {
+      bcName: values.bcName.trim(),
+      bcLabelArtist: values.bcLabelArtist,
+      bcPrimaryGenre: normalize(values.bcPrimaryGenre) ?? undefined,
+      bcHomeCity: normalize(values.bcHomeCity) ?? undefined,
+      bcMembers: members,
+    };
+    mutation.mutate(payload);
+  };
+
+  const disableSubmit = mutation.isPending || musicianOptions.length === 0;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Nueva banda</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent dividers>
+          {musicianOptions.length === 0 ? (
+            <Alert severity="info">
+              Registra primero músicos en el CRM para poder armar la banda.
+            </Alert>
+          ) : (
+            <Stack spacing={2} sx={{ mt: 0.5 }}>
+              <TextField
+                label="Nombre de la banda"
+                fullWidth
+                {...register('bcName')}
+                error={!!errors.bcName}
+                helperText={errors.bcName?.message}
+              />
+
+              <Controller
+                name="bcLabelArtist"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={field.value}
+                        onChange={(event) => field.onChange(event.target.checked)}
+                        inputRef={field.ref}
+                      />
+                    }
+                    label="¿Firma con sello discográfico?"
+                  />
+                )}
+              />
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <TextField
+                  label="Género principal"
+                  fullWidth
+                  {...register('bcPrimaryGenre')}
+                />
+                <TextField
+                  label="Ciudad base"
+                  fullWidth
+                  {...register('bcHomeCity')}
+                />
+              </Stack>
+
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="subtitle1" fontWeight={600}>Integrantes</Typography>
+                <Button
+                  startIcon={<AddCircleOutlineIcon />}
+                  onClick={() => append({ bmPartyId: '', bmRole: '' })}
+                >
+                  Añadir integrante
+                </Button>
+              </Stack>
+
+              {fields.map((fieldItem, index) => {
+                const memberErrors = errors.bcMembers?.[index];
+                return (
+                  <Paper key={fieldItem.id} variant="outlined" sx={{ p: 2 }}>
+                    <Stack spacing={2}>
+                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                        <Controller
+                          name={`bcMembers.${index}.bmPartyId` as const}
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!memberErrors?.bmPartyId}>
+                              <InputLabel id={`member-${index}-label`}>Músico</InputLabel>
+                              <Select
+                                labelId={`member-${index}-label`}
+                                label="Músico"
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                              >
+                                {musicianOptions.map(option => (
+                                  <MenuItem key={option.partyId} value={String(option.partyId)}>
+                                    {option.displayName}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {memberErrors?.bmPartyId && (
+                                <FormHelperText error>{memberErrors.bmPartyId.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                        <Tooltip title="Eliminar integrante">
+                          <span>
+                            <IconButton
+                              aria-label="Eliminar integrante"
+                              onClick={() => remove(index)}
+                              disabled={fields.length === 1}
+                            >
+                              <DeleteOutlineIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+
+                      <TextField
+                        label="Responsabilidad"
+                        placeholder="Voz, Batería, Guitarra líder..."
+                        fullWidth
+                        {...register(`bcMembers.${index}.bmRole` as const)}
+                        error={!!memberErrors?.bmRole}
+                        helperText={memberErrors?.bmRole?.message}
+                      />
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={mutation.isPending}>Cancelar</Button>
+          <Button type="submit" variant="contained" disabled={disableSubmit}>
+            {mutation.isPending ? 'Creando…' : 'Crear banda'}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
+  );
+}
+
+function PartyDetailDialog({
+  party, open, onClose
+}: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+  const [tab, setTab] = useState<'overview' | 'bookings' | 'packages' | 'invoices'>('overview');
+
+  useEffect(() => {
+    if (open) {
+      setTab('overview');
+    }
+  }, [open, party?.partyId]);
+
+  const partyId = party?.partyId ?? null;
+
+  const bookingsQuery = useQuery({
+    queryKey: ['party-bookings', partyId],
+    queryFn: () => (partyId ? Bookings.listByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'bookings' && !!partyId,
+  });
+
+  const invoicesQuery = useQuery({
+    queryKey: ['party-invoices', partyId],
+    queryFn: () => (partyId ? Invoices.listByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'invoices' && !!partyId,
+  });
+
+  const formatDate = (value: string) => new Date(value).toLocaleString();
+  const formatCurrency = (cents: number) => (cents / 100).toLocaleString('es-EC', { style: 'currency', currency: 'USD' });
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{party?.displayName ?? 'Detalle'}</DialogTitle>
+      <DialogContent dividers>
+        <Tabs value={tab} onChange={(_event, value) => setTab(value)} sx={{ mb: 2 }}>
+          <Tab label="Resumen" value="overview" />
+          <Tab label="Bookings" value="bookings" />
+          <Tab label="Paquetes" value="packages" />
+          <Tab label="Facturas" value="invoices" />
+        </Tabs>
+        {tab === 'overview' && (
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip label={party?.isOrg ? 'Organización' : 'Persona'} color={party?.isOrg ? 'primary' : 'default'} size="small" />
+              <Typography variant="body2" color="text.secondary">ID #{party?.partyId}</Typography>
+            </Stack>
+            <Divider />
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">Contacto</Typography>
+              <Typography variant="body2">Correo: {party?.primaryEmail ?? '—'}</Typography>
+              <Typography variant="body2">Teléfono: {party?.primaryPhone ?? '—'}</Typography>
+              <Typography variant="body2">WhatsApp: {party?.whatsapp ?? '—'}</Typography>
+              <Typography variant="body2">Instagram: {party?.instagram ?? '—'}</Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">Información adicional</Typography>
+              <Typography variant="body2">Razón social: {party?.legalName ?? '—'}</Typography>
+              <Typography variant="body2">RUC / CI: {party?.taxId ?? '—'}</Typography>
+              <Typography variant="body2">Contacto de emergencia: {party?.emergencyContact ?? '—'}</Typography>
+              <Typography variant="body2">Notas: {party?.notes ?? '—'}</Typography>
+            </Stack>
+          </Stack>
+        )}
+        {tab === 'bookings' && (
+          <Stack spacing={2}>
+            {bookingsQuery.isPending && <CircularProgress size={24} sx={{ alignSelf: 'center' }} />}
+            {bookingsQuery.isError && (
+              <Alert severity="error">{(bookingsQuery.error as Error).message}</Alert>
+            )}
+            {!bookingsQuery.isPending && !bookingsQuery.isError && (
+              bookingsQuery.data && bookingsQuery.data.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Título</TableCell>
+                        <TableCell>Inicio</TableCell>
+                        <TableCell>Fin</TableCell>
+                        <TableCell>Estado</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {bookingsQuery.data.map(booking => (
+                        <TableRow key={booking.bookingId}>
+                          <TableCell>{booking.title}</TableCell>
+                          <TableCell>{formatDate(booking.startsAt)}</TableCell>
+                          <TableCell>{formatDate(booking.endsAt)}</TableCell>
+                          <TableCell>{booking.status}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No hay bookings asociados a este contacto todavía.
+                </Typography>
+              )
+            )}
+          </Stack>
+        )}
+        {tab === 'packages' && (
+          <Typography variant="body2" color="text.secondary">
+            El historial de paquetes estará disponible cuando el backend exponga `/packages/purchases` con filtros por cliente.
+          </Typography>
+        )}
+        {tab === 'invoices' && (
+          <Stack spacing={2}>
+            {invoicesQuery.isPending && <CircularProgress size={24} sx={{ alignSelf: 'center' }} />}
+            {invoicesQuery.isError && (
+              <Alert severity="error">{(invoicesQuery.error as Error).message}</Alert>
+            )}
+            {!invoicesQuery.isPending && !invoicesQuery.isError && (
+              invoicesQuery.data && invoicesQuery.data.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Número</TableCell>
+                        <TableCell>Total</TableCell>
+                        <TableCell>Estado</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {invoicesQuery.data.map(invoice => (
+                        <TableRow key={invoice.invId}>
+                          <TableCell>{invoice.number ?? invoice.invId}</TableCell>
+                          <TableCell>{formatCurrency(invoice.totalC)}</TableCell>
+                          <TableCell>{invoice.statusI}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Aún no registramos facturas para este contacto.
+                </Typography>
+              )
+            )}
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cerrar</Button>
       </DialogActions>
     </Dialog>
   );
@@ -357,7 +731,9 @@ function EditPartyDialog({
 export default function PartiesPage() {
   const { data = [], isLoading, error } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
   const [createOpen, setCreateOpen] = useState(false);
+  const [bandOpen, setBandOpen] = useState(false);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
+  const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
@@ -367,7 +743,14 @@ export default function PartiesPage() {
     { header: 'Instagram', accessorKey: 'instagram' },
     {
       header: 'Acciones', cell: ({ row }) => (
-        <IconButton onClick={() => setEditing(row.original)}><EditIcon /></IconButton>
+        <IconButton
+          onClick={(event) => {
+            event.stopPropagation();
+            setEditing(row.original);
+          }}
+        >
+          <EditIcon />
+        </IconButton>
       )
     }
   ], []);
@@ -389,7 +772,10 @@ export default function PartiesPage() {
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Typography variant="h5">Personas / CRM</Typography>
-        <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+        <Stack direction="row" spacing={1}>
+          <Button variant="outlined" onClick={() => setBandOpen(true)}>Nueva Banda</Button>
+          <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+        </Stack>
       </Stack>
 
       <TextField
@@ -413,7 +799,7 @@ export default function PartiesPage() {
             </TableHead>
             <TableBody>
               {table.getRowModel().rows.map(r => (
-                <TableRow key={r.id} hover>
+                <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
                   {r.getVisibleCells().map(c => (
                     <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
                   ))}
@@ -426,6 +812,7 @@ export default function PartiesPage() {
         {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
       </Paper>
 
+      <CreateBandDialog open={bandOpen} onClose={() => setBandOpen(false)} parties={data} />
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       {editing && (
         <EditPartyDialog
@@ -434,6 +821,9 @@ export default function PartiesPage() {
           open
           onClose={() => setEditing(null)}
         />
+      )}
+      {detail && (
+        <PartyDetailDialog party={detail} open onClose={() => setDetail(null)} />
       )}
     </>
   );
