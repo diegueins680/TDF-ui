@@ -102,6 +102,7 @@ export default function TrialRequestPage() {
         notes: notes.trim() || undefined,
       });
       setDone(true);
+      setSelectedSlots([]);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No pudimos registrar tu solicitud.';
       setError(message);
