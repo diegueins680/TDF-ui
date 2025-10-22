@@ -7,6 +7,8 @@ export const client = axios.create({
   withCredentials: true,
 });
 
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
 let authToken: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
 
@@ -122,7 +124,81 @@ export function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const get = <T>(path: string) => request<T>({ url: path, method: 'GET' });
-export const post = <T>(path: string, body: unknown) => request<T>({ url: path, method: 'POST', data: normalizeBody(body) });
-export const put = <T>(path: string, body: unknown) => request<T>({ url: path, method: 'PUT', data: normalizeBody(body) });
-export const patch = <T>(path: string, body: unknown) => request<T>({ url: path, method: 'PATCH', data: normalizeBody(body) });
+export const post = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'POST', data: normalizeBody(body) });
+export const put = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'PUT', data: normalizeBody(body) });
+export const patch = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'PATCH', data: normalizeBody(body) });
 export const del = <T>(path: string) => request<T>({ url: path, method: 'DELETE' });
+
+export const apiClient = { get, post, put, patch, delete: del };
+
+export type LessonPackage = {
+  id: string;
+  name: string;
+  lessonsIncluded: number;
+  priceCents: number;
+  currency: string;
+  teacherId?: string | null;
+  studentId?: string | null;
+  expiresAt?: string | null;
+  createdAt?: string;
+};
+
+export type Lesson = {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  scheduledAt: string;
+  durationMin: number;
+  topic?: string;
+  materialUrl?: string | null;
+  packageId?: string | null;
+  status?: 'SCHEDULED' | 'DONE' | 'CANCELLED';
+};
+
+export type Payment = {
+  id: string;
+  packageId: string;
+  studentId: string;
+  amountCents: number;
+  currency: string;
+  paidAt: string;
+  method?: string;
+};
+
+export type Receipt = {
+  id: string;
+  number: string;
+  issueDate: string;
+  studentName: string;
+  studentEmail?: string;
+  packageName: string;
+  amountCents: number;
+  currency: string;
+  notes?: string;
+  teacherName?: string;
+  organization?: string;
+};
+
+export function cents(amountCents: number, currency: string) {
+  const amount = (amountCents ?? 0) / 100;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
+
+export const tdfApi = {
+  listPackages: () => get<LessonPackage[]>('/packages'),
+  createPackage: (data: Partial<LessonPackage>) => post<LessonPackage>('/packages', data),
+  lessonsByTeacher: (teacherId: string) => get<Lesson[]>(`/teachers/${teacherId}/lessons`),
+  lessonsByStudent: (studentId: string) => get<Lesson[]>(`/students/${studentId}/lessons`),
+  studentsByTeacher: (teacherId: string) =>
+    get<Array<{ id: string; name: string; email?: string }>>(`/teachers/${teacherId}/students`),
+  listPayments: () => get<Payment[]>('/payments'),
+  getReceipt: (receiptId: string) => get<Receipt>(`/receipts/${receiptId}`),
+};

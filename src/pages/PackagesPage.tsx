@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -322,15 +323,29 @@ export default function PackagesPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        justifyContent="space-between"
+        spacing={1}
+      >
         <Typography variant="h5">Paquetes</Typography>
-        {tab === 'catalog' ? (
-          <Button variant="contained" onClick={onCreate}>Nuevo producto</Button>
-        ) : (
-          <Button variant="contained" onClick={purchaseForm.handleSubmit(submitPurchase)} disabled={purchaseMutation.isPending}>
-            {purchaseMutation.isPending ? 'Registrando…' : 'Registrar compra'}
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Button component={RouterLink} to="resumen" variant="outlined">
+            Vista resumida
           </Button>
-        )}
+          {tab === 'catalog' ? (
+            <Button variant="contained" onClick={onCreate}>Nuevo producto</Button>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={purchaseForm.handleSubmit(submitPurchase)}
+              disabled={purchaseMutation.isPending}
+            >
+              {purchaseMutation.isPending ? 'Registrando…' : 'Registrar compra'}
+            </Button>
+          )}
+        </Stack>
       </Stack>
       {successMessage && (
         <Alert severity="success" onClose={() => setSuccessMessage(null)}>{successMessage}</Alert>

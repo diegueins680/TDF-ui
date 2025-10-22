@@ -18,6 +18,12 @@ import SignupPage from './pages/public/SignupPage';
 import TrialRequestPage from './pages/public/TrialRequestPage';
 import TrialQueuePage from './pages/trials/TrialQueuePage';
 import StudentProfilePage from './pages/students/StudentProfilePage';
+import PackageListLite from './features/packages/PackageList';
+import Payments from './features/payments/Payments';
+import ReceiptView from './features/receipts/ReceiptView';
+import TeacherLessons from './features/lessons/TeacherLessons';
+import StudentLessons from './features/lessons/StudentLessons';
+import StudentsByTeacher from './features/students/StudentsByTeacher';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './auth/AuthProvider';
 
@@ -100,7 +106,8 @@ export default function App() {
               <Route index element={<Navigate to="facturas" replace />} />
               <Route path="cotizaciones" element={<Placeholder title="Finanzas · Cotizaciones" />} />
               <Route path="facturas" element={<InvoicesPage />} />
-              <Route path="cobros" element={<Placeholder title="Finanzas · Cobros" />} />
+              <Route path="cobros" element={<Payments />} />
+              <Route path="recibos/:receiptId" element={<ReceiptView />} />
               <Route path="regalias" element={<Placeholder title="Finanzas · Regalías" />} />
             </Route>
 
@@ -110,6 +117,7 @@ export default function App() {
               <Route path="reservas-equipo" element={<Placeholder title="Operación · Reservas de equipo" />} />
               <Route path="mantenimiento" element={<Placeholder title="Operación · Mantenimiento" />} />
               <Route path="paquetes" element={<PackagesPage />} />
+              <Route path="paquetes/resumen" element={<PackageListLite />} />
             </Route>
 
             <Route path="/configuracion" element={<Outlet />}>
@@ -141,6 +149,12 @@ export default function App() {
             <Route path="/admin" element={<Navigate to="/configuracion/roles-permisos" replace />} />
 
             <Route path="/students/:id" element={<StudentProfilePage />} />
+            <Route path="/finance/receipts/:receiptId" element={<ReceiptView />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/packages/lite" element={<PackageListLite />} />
+            <Route path="/teachers/:teacherId/lessons" element={<TeacherLessons />} />
+            <Route path="/teachers/:teacherId/students" element={<StudentsByTeacher />} />
+            <Route path="/students/:studentId/lessons" element={<StudentLessons />} />
             <Route path="*" element={<Navigate to="/inicio" replace />} />
           </Route>
         </Route>
