@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Container,
-  Typography,
-  Stack,
-  TextField,
-  MenuItem,
-  Button,
   Alert,
+  Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
   CircularProgress,
-  Box,
+  Container,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -47,11 +47,14 @@ export default function TrialRequestPage() {
 
   const subjectsQuery = useQuery({ queryKey: ['trials', 'subjects'], queryFn: Trials.listSubjects });
 
-  const subjectOptions = subjectsQuery.data ?? [];
+  const subjectOptions = useMemo(() => {
+    const list = subjectsQuery.data ?? [];
+    return list.slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [subjectsQuery.data]);
 
   useEffect(() => {
     if (!subjectOptions.length) return;
-    setSelectedSubject(prev => (prev ? prev : subjectOptions[0]?.subjectId ?? ''));
+    setSelectedSubject((prev) => (prev ? prev : subjectOptions[0]?.subjectId ?? ''));
   }, [subjectOptions]);
 
   const slotsQuery = useQuery({
@@ -62,12 +65,15 @@ export default function TrialRequestPage() {
 
   useEffect(() => {
     setSelectedSlot(null);
+    setDone(false);
   }, [selectedSubject]);
 
   const teachersWithSlots: TrialSlotDTO[] = useMemo(() => slotsQuery.data ?? [], [slotsQuery.data]);
 
   const handleSelectSlot = (teacher: TrialSlotDTO, slot: PreferredSlotDTO) => {
     setSelectedSlot({ ...slot, teacherId: teacher.teacherId, teacherName: teacher.teacherName });
+    setDone(false);
+    setError(null);
   };
 
   const submit = async () => {
@@ -96,6 +102,7 @@ export default function TrialRequestPage() {
         notes: notes.trim() || undefined,
       });
       setDone(true);
+      setSelectedSlot(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No pudimos registrar tu solicitud.';
       setError(message);
@@ -111,19 +118,26 @@ export default function TrialRequestPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
-      <Typography variant="h4" gutterBottom>Solicitar clase de prueba</Typography>
+      <Typography variant="h4" gutterBottom>
+        Solicitar clase de prueba
+      </Typography>
       {done ? (
         <Alert severity="success">¡Solicitud enviada! Te contactaremos pronto.</Alert>
       ) : (
         <Stack gap={3}>
           {error && <Alert severity="error">{error}</Alert>}
+          {subjectsQuery.isError && (
+            <Alert severity="error">
+              No pudimos cargar las materias disponibles. Intenta de nuevo en unos minutos.
+            </Alert>
+          )}
           <TextField
             select
             label="Materia"
             value={selectedSubject}
             onChange={(event) => setSelectedSubject(event.target.value ? Number(event.target.value) : '')}
             sx={{ maxWidth: 360 }}
-            disabled={subjectsQuery.isLoading}
+            disabled={subjectsQuery.isLoading || subjectOptions.length === 0}
             helperText={subjectsQuery.isLoading ? 'Cargando materias…' : undefined}
           >
             {subjectOptions.map((subject) => (
@@ -144,14 +158,20 @@ export default function TrialRequestPage() {
             ) : slotsQuery.isError ? (
               <Alert severity="error">No pudimos cargar los horarios disponibles.</Alert>
             ) : teachersWithSlots.length === 0 ? (
-              <Alert severity="warning">Por ahora no hay horarios disponibles para esta materia. Vuelve a intentarlo más tarde.</Alert>
+              <Alert severity="warning">
+                Por ahora no hay horarios disponibles para esta materia. Vuelve a intentarlo más tarde.
+              </Alert>
             ) : (
               <Stack gap={2}>
                 {teachersWithSlots.map((teacher) => (
                   <Card key={teacher.teacherId} variant="outlined">
                     <CardHeader
                       title={teacher.teacherName}
-                      subheader={selectedSubjectData?.name ? `Profesor de ${selectedSubjectData.name}` : 'Profesor disponible'}
+                      subheader={
+                        selectedSubjectData?.name
+                          ? `Profesor de ${selectedSubjectData.name}`
+                          : 'Profesor disponible'
+                      }
                     />
                     <CardContent>
                       {teacher.slots.length === 0 ? (
@@ -201,12 +221,7 @@ export default function TrialRequestPage() {
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Comparte contexto adicional (experiencia, objetivo, etc.)"
           />
-          <Button
-            variant="contained"
-            onClick={submit}
-            size="large"
-            disabled={isSubmitting || !selectedSlot}
-          >
+          <Button variant="contained" onClick={submit} size="large" disabled={isSubmitting || !selectedSlot}>
             {isSubmitting ? 'Enviando…' : 'Enviar solicitud'}
           </Button>
         </Stack>

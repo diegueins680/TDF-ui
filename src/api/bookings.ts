@@ -8,6 +8,9 @@ export type CreateBookingReq = {
   cbEndsAt: string;
   cbStatus: string;
   cbNotes?: string | null;
+  cbPartyId?: number | null;
+  cbServiceType?: string | null;
+  cbResourceIds?: string[];
 };
 
 export const Bookings = {
