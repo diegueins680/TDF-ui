@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { Logo } from '../Logo'
 
 type HeaderNavItem = {
   to: string
@@ -16,14 +17,6 @@ type HeaderProps = {
 
 export default function Header({ items, username, onLogout }: HeaderProps) {
   const [logoReady, setLogoReady] = useState(false)
-  const logoRef = useRef<HTMLImageElement | null>(null)
-
-  useEffect(() => {
-    const node = logoRef.current
-    if (node?.complete && node.naturalWidth > 0) {
-      setLogoReady(true)
-    }
-  }, [])
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('tdf-theme') : null
     const root = document.documentElement
@@ -53,13 +46,10 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
     <header className="site-header">
       <div className="container navbar">
         <Link to="/" className={brandClass} aria-label="TDF Records home">
-          <img
-            src="/assets/tdf-ui/tdf_logo_white.svg?v=3"
-            alt=""
+          <Logo
             className="brand-logo"
-            ref={logoRef}
+            alt="TDF Records"
             onLoad={() => setLogoReady(true)}
-            onError={() => setLogoReady(false)}
           />
           <span className="brand-title">TDF Records</span>
         </Link>
