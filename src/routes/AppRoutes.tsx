@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import SideNav from '../components/SideNav';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
@@ -7,8 +8,8 @@ export type Role =
 
 export interface User { id: string; roles: Role[]; }
 
+// TODO: Reemplazar por hook/auth real
 function useCurrentUser(): User | null {
-  // TODO: Reemplazar por tu hook real (auth).
   return { id: 'demo', roles: ['admin'] };
 }
 
@@ -21,31 +22,35 @@ function RequireRole(props: { allowed: '*' | Role[]; children: React.ReactNode }
   return <Navigate to="/inicio" replace />;
 }
 
-function Layout() {
-  return (
-    <div className="app-layout">
-      <header className="app-header" style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 12 }}>
-        <strong>TDF</strong>
-        <select aria-label="Unidad" style={{ marginLeft: 'auto' }}>
-          <option>Unidad A</option>
-          <option>Unidad B</option>
-        </select>
-      </header>
-      <main className="app-main">
-        <Outlet />
-      </main>
-    </div>
-  );
-}
-
 function Page(props: { title: string }) {
   return <div style={{ padding: 24 }}><h1>{props.title}</h1><p>Placeholder</p></div>;
+}
+
+function Layout() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', height: '100vh' }}>
+      <SideNav />
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderBottom: '1px solid #eee' }}>
+          <strong>TDF</strong>
+          <select aria-label="Unidad" style={{ marginLeft: 'auto' }}>
+            <option>Unidad A</option>
+            <option>Unidad B</option>
+          </select>
+          {/* TODO: Buscador global (Cmd/Ctrl+K) y botón Crear (+) por rol */}
+        </header>
+        <main style={{ overflow: 'auto' }}>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
 }
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Aliases */}
+      {/* Aliases desde rutas previas */}
       <Route path="/parties" element={<Navigate to="/crm/contactos" replace />} />
       <Route path="/bookings" element={<Navigate to="/estudio/calendario" replace />} />
       <Route path="/pipelines" element={<Navigate to="/estudio/pipelines" replace />} />
@@ -54,6 +59,7 @@ export default function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/inicio" element={<Page title="Inicio" />} />
 
+        {/* CRM */}
         <Route
           path="/crm"
           element={<RequireRole allowed={['admin','finanzas','booker','ingeniero','productor','profesor','promotor']}><Outlet /></RequireRole>}
@@ -64,6 +70,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="contactos" replace />} />
         </Route>
 
+        {/* Estudio */}
         <Route
           path="/estudio"
           element={<RequireRole allowed={['admin','booker','ingeniero','productor','finanzas']}><Outlet /></RequireRole>}
@@ -76,6 +83,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>
 
+        {/* Label */}
         <Route
           path="/label"
           element={<RequireRole allowed={['admin','productor','finanzas','artista','ingeniero']}><Outlet /></RequireRole>}
@@ -91,6 +99,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
 
+        {/* Eventos */}
         <Route
           path="/eventos"
           element={<RequireRole allowed={['admin','promotor','productor','finanzas']}><Outlet /></RequireRole>}
@@ -104,6 +113,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="agenda" replace />} />
         </Route>
 
+        {/* Escuela */}
         <Route
           path="/escuela"
           element={<RequireRole allowed={['admin','profesor','estudiante','finanzas']}><Outlet /></RequireRole>}
@@ -117,6 +127,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="cursos" replace />} />
         </Route>
 
+        {/* Finanzas */}
         <Route
           path="/finanzas"
           element={<RequireRole allowed={['admin','finanzas']}><Outlet /></RequireRole>}
@@ -128,6 +139,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="cotizaciones" replace />} />
         </Route>
 
+        {/* Operación */}
         <Route
           path="/operacion"
           element={<RequireRole allowed={['admin','booker','ingeniero','productor','promotor']}><Outlet /></RequireRole>}
@@ -139,6 +151,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="inventario" replace />} />
         </Route>
 
+        {/* Configuración */}
         <Route
           path="/configuracion"
           element={<RequireRole allowed={['admin']}><Outlet /></RequireRole>}
@@ -153,6 +166,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="roles-permisos" replace />} />
         </Route>
 
+        {/* Insights */}
         <Route
           path="/insights"
           element={<RequireRole allowed={['admin','finanzas','booker','ingeniero','productor','profesor','promotor']}><Page title="Insights" /></RequireRole>}

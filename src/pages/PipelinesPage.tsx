@@ -10,11 +10,21 @@ const MASTERING = ['Brief','v1','Revisions','Approved','DDP Delivered'] as const
 
 function Column({ id, title, jobs }: { id: string; title: string; jobs: PipelineCard[] }) {
   return (
-    <Paper sx={{ p: 1, minWidth: 280, maxHeight: '70vh', overflowY: 'auto' }} variant="outlined">
-      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>{title} <Chip size="small" label={jobs.length} sx={{ ml: 1 }} /></Typography>
+    <Paper
+      sx={{ p: 1, minWidth: 280, height: '70vh', display: 'flex', flexDirection: 'column' }}
+      variant="outlined"
+    >
+      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>
+        {title} <Chip size="small" label={jobs.length} sx={{ ml: 1 }} />
+      </Typography>
       <Droppable droppableId={id}>
         {(provided) => (
-          <Stack ref={provided.innerRef} {...provided.droppableProps} gap={1}>
+          <Stack
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            gap={1}
+            sx={{ overflowY: 'auto', pr: 0.5, flexGrow: 1 }}
+          >
             {jobs.map((j, idx) => (
               <Draggable draggableId={j.id} index={idx} key={j.id}>
                 {(prov) => (

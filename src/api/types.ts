@@ -40,6 +40,12 @@ export type PartyUpdate = Partial<{
   uNotes: string | null;
 }>;
 
+export type BookingResourceDTO = {
+  roomId: string;
+  roomName: string;
+  role: string;
+};
+
 export type BookingDTO = {
   bookingId: number;
   title: string;
@@ -49,6 +55,8 @@ export type BookingDTO = {
   notes?: string | null;
   partyId?: number | null;
   serviceOrderId?: number | null;
+  serviceType?: string | null;
+  resources?: BookingResourceDTO[];
 };
 
 export type PipelineType = 'Mixing' | 'Mastering';
@@ -87,6 +95,17 @@ export type Page<T> = {
   page: number;
   pageSize: number;
   total: number;
+};
+
+export type AdminConsoleCard = {
+  cardId: string;
+  title: string;
+  body: string[];
+};
+
+export type AdminConsoleView = {
+  status: string;
+  cards: AdminConsoleCard[];
 };
 
 export type RoomDTO = {
@@ -304,6 +323,30 @@ export type AuditLogEntry = {
 export type PreferredSlotDTO = {
   startAt: string;
   endAt: string;
+  teacherId?: number;
+  teacherName?: string;
+};
+
+export type TrialTeacherAvailabilityDTO = {
+  subjectId: number;
+  subjectName?: string;
+  teacherId?: number | null;
+  teacherName?: string | null;
+};
+
+export type TrialSlotDTO = {
+  subjectId: number;
+  teacherId: number;
+  teacherName: string;
+  slots: PreferredSlotDTO[];
+};
+
+export type TrialAvailabilityDTO = {
+  teacherId: number;
+  teacherName: string;
+  subjectId: number;
+  subjectName?: string;
+  slots: PreferredSlotDTO[];
 };
 
 export type TrialRequestCreate = {
@@ -397,4 +440,3 @@ export type CommissionDTO = {
   basisCents: number;
   percent: number;
 };
-

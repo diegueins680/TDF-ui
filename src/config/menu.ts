@@ -2,16 +2,29 @@ export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
   | 'artista' | 'profesor' | 'estudiante' | 'promotor';
 
-export const topLevel = ["Inicio","CRM","Estudio","Label","Eventos","Escuela","Finanzas","Operación"] as const;
+export const topLevel = [
+  "Inicio",
+  "CRM",
+  "Estudio",
+  "Label",
+  "Eventos",
+  "Escuela",
+  "Finanzas",
+  "Operación",
+  "Configuración",
+  "Insights"
+] as const;
 
 export const submenus: Record<string, string[]> = {
   "CRM": ["Contactos","Empresas","Leads"],
   "Estudio": ["Calendario","Salas y recursos","Órdenes","Pipelines","Reportes"],
   "Label": ["Artistas","Proyectos","Releases","Tracks y assets","Contratos","Regalías","Marketing"],
   "Eventos": ["Agenda","Fechas y tours","Venues","Staff","Presupuestos","Post-mortem"],
-  "Escuela": ["Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
+  "Escuela": ["Profesores","Clases","Trial Lessons","Trial Queue","Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
   "Finanzas": ["Cotizaciones","Facturas","Cobros","Regalías"],
-  "Operación": ["Inventario","Reservas de equipo","Mantenimiento","Paquetes"]
+  "Operación": ["Inventario","Reservas de equipo","Mantenimiento","Paquetes"],
+  "Configuración": ["Roles y permisos","Impuestos y series","Unidades de negocio","Sedes","Marcas","Integraciones","Preferencias"],
+  "Insights": []
 };
 
 export const visibilityByRole: Record<Role, (string | "*")[]> = {
@@ -37,3 +50,53 @@ export const quickCreate: Record<Role, string[]> = {
   estudiante: ["Inscripción","Pago","Ticket de soporte"],
   promotor: ["Evento","Fecha de tour","Venue","Staff"]
 };
+
+const ROLE_ALIASES: Record<string, Role> = {
+  admin: 'admin',
+  Admin: 'admin',
+  manager: 'admin',
+  Manager: 'admin',
+  finanzas: 'finanzas',
+  Finance: 'finanzas',
+  Accounting: 'finanzas',
+  accounting: 'finanzas',
+  booker: 'booker',
+  Booker: 'booker',
+  reception: 'booker',
+  Reception: 'booker',
+  ingeniero: 'ingeniero',
+  Engineer: 'ingeniero',
+  engineer: 'ingeniero',
+  productor: 'productor',
+  Producer: 'productor',
+  producer: 'productor',
+  artista: 'artista',
+  Artist: 'artista',
+  artist: 'artista',
+  profesor: 'profesor',
+  Teacher: 'profesor',
+  teacher: 'profesor',
+  estudiante: 'estudiante',
+  Student: 'estudiante',
+  student: 'estudiante',
+  promotor: 'promotor',
+  Promoter: 'promotor',
+  promoter: 'promotor',
+  vendor: 'promotor',
+  Vendor: 'promotor',
+  readonly: 'booker',
+  ReadOnly: 'booker',
+  customer: 'artista',
+  Customer: 'artista'
+};
+
+export function normalizeRoles(rawRoles: readonly string[] | undefined): Role[] {
+  if (!rawRoles || rawRoles.length === 0) {
+    return ['admin'];
+  }
+  const normalized = rawRoles
+    .map(role => ROLE_ALIASES[role] ?? ROLE_ALIASES[role.toLowerCase()])
+    .filter((value): value is Role => Boolean(value));
+
+  return normalized.length > 0 ? normalized : ['admin'];
+}

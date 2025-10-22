@@ -1,5 +1,5 @@
 import { get, post } from './client';
-import type { AuditLogEntry } from './types';
+import type { AdminConsoleView, AuditLogEntry } from './types';
 
 export const AdminApi = {
   seed: () => post<void>('/admin/seed', {}),
@@ -14,4 +14,5 @@ export const AdminApi = {
       throw error;
     }
   },
+  consolePreview: () => get<AdminConsoleView>('/stubs/admin/console'),
 };
