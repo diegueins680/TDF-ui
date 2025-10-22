@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { Logo } from '../Logo'
+
+type HeaderNavItem = {
+  to: string
+  label: string
+  disabled?: boolean
+  tooltip?: string
+}
 
 type HeaderProps = {
-  items: Array<{ to: string; label: string }>
+  items: HeaderNavItem[]
   username?: string
   onLogout?: () => void
 }
 
 export default function Header({ items, username, onLogout }: HeaderProps) {
   const [logoReady, setLogoReady] = useState(false)
-  const logoRef = useRef<HTMLImageElement | null>(null)
-
-  useEffect(() => {
-    const node = logoRef.current
-    if (node?.complete && node.naturalWidth > 0) {
-      setLogoReady(true)
-    }
-  }, [])
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('tdf-theme') : null
     const root = document.documentElement
@@ -45,22 +45,25 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link to="/" className={brandClass} aria-label="TDF HQ home">
-          <img
-            src="/assets/tdf-ui/tdf_logo.svg"
-            alt=""
+        <Link to="/" className={brandClass} aria-label="TDF Records home">
+          <Logo
             className="brand-logo"
-            ref={logoRef}
+            alt="TDF Records"
             onLoad={() => setLogoReady(true)}
-            onError={() => setLogoReady(false)}
           />
-          <span className="brand-title">TDF HQ</span>
+          <span className="brand-title">TDF Records</span>
         </Link>
         <nav className="nav-links" aria-label="Primary">
           {items.map(item => (
-            <NavLink key={item.to} to={item.to} className={navClass}>
-              {item.label}
-            </NavLink>
+            item.disabled ? (
+              <span key={item.to} className="nav-link is-disabled" title={item.tooltip} aria-disabled="true">
+                {item.label}
+              </span>
+            ) : (
+              <NavLink key={item.to} to={item.to} className={navClass} title={item.tooltip ?? undefined}>
+                {item.label}
+              </NavLink>
+            )
           ))}
         </nav>
         <div className="nav-actions">

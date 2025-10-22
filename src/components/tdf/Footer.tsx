@@ -3,8 +3,8 @@ export default function Footer(){
     <footer className="site-footer">
       <div className="container cluster" style={{justifyContent:"space-between"}}>
         <div className="cluster">
-          <img className="brand-logo" src="/assets/tdf-ui/tdf_logo_alt.svg" alt="TDF HQ"/>
-          <span>&copy; {new Date().getFullYear()} TDF HQ</span>
+          <img className="brand-logo" src="/assets/tdf-ui/tdf_logo_black.svg" alt="TDF Records"/>
+          <span>&copy; {new Date().getFullYear()} TDF Records</span>
         </div>
         <div className="cluster">
           <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>

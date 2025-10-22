@@ -24,6 +24,15 @@ const schema = z.object({
   cbStatus: z.enum(['Confirmed','Tentative','Cancelled','Completed']).default('Confirmed')
 });
 
+function formatDateTimeLocal(value?: string) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const tzOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  const local = new Date(date.getTime() - tzOffsetMs);
+  return local.toISOString().slice(0, 16);
+}
+
 function CalendarView({ events, onSelect }: { events: any[], onSelect: (start: string, end: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const calRef = useRef<Calendar | null>(null);
@@ -55,12 +64,12 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
   const qc = useQueryClient();
   const { handleSubmit, register, setValue, formState: { errors } } = useForm<CreateBookingReq>({
     resolver: zodResolver(schema),
-    defaultValues: { cbTitle: 'New Booking', cbStartsAt: initialStart, cbEndsAt: initialEnd, cbStatus: 'Confirmed' }
+    defaultValues: { cbTitle: 'New Booking', cbStartsAt: '', cbEndsAt: '', cbStatus: 'Confirmed' }
   });
 
   useEffect(()=>{
-    if (initialStart) setValue('cbStartsAt', initialStart);
-    if (initialEnd) setValue('cbEndsAt', initialEnd);
+    setValue('cbStartsAt', formatDateTimeLocal(initialStart));
+    setValue('cbEndsAt', formatDateTimeLocal(initialEnd));
   }, [initialStart, initialEnd, setValue]);
 
   const m = useMutation({
