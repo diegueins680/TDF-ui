@@ -1,7 +1,7 @@
 
-# TDF HQ UI Pro (React + Vite + MUI + React Query)
+# TDF Records UI Pro (React + Vite + MUI + React Query)
 
-Polished scaffold for TDF HQ frontend:
+Polished scaffold for TDF Records frontend:
 - **Parties** (CRM) with MUI table + search + create/edit dialogs (RHF + Zod).
 - **Bookings** calendar using FullCalendar, wired to `/bookings` (GET/POST).
 - **Pipelines** Kanban for Mixing/Mastering (hello-pangea/dnd); API hook present.
