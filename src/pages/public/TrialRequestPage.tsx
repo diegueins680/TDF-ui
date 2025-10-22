@@ -1,91 +1,104 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CircularProgress,
   Container,
-  Typography,
+  MenuItem,
   Stack,
   TextField,
-  MenuItem,
-  Button,
-  Alert,
-  CircularProgress,
-  Box,
+  Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 import { Trials } from '../../api/trials';
+import type { PreferredSlotDTO, SubjectDTO, TrialSlotDTO } from '../../api/types';
 
-type SelectedSlot = { teacherId: number; startAt: string; endAt: string };
+dayjs.locale('es');
+
+type SelectedSlot = PreferredSlotDTO & { teacherId: number; teacherName: string };
+
+function formatSlotLabel(slot: PreferredSlotDTO) {
+  const start = dayjs(slot.startAt);
+  const end = dayjs(slot.endAt);
+  if (!start.isValid() || !end.isValid()) {
+    return `${slot.startAt} → ${slot.endAt}`;
+  }
+
+  const durationMinutes = Math.max(end.diff(start, 'minute'), 0);
+  const dateLabel = start.format('ddd D [de] MMMM');
+  const timeLabel = `${start.format('HH:mm')} – ${end.format('HH:mm')}`;
+  const durationLabel = durationMinutes ? ` · ${durationMinutes} min` : '';
+  return `${dateLabel}\n${timeLabel}${durationLabel}`;
+}
 
 export default function TrialRequestPage() {
-  const subjectsQuery = useQuery({ queryKey: ['trials', 'subjects'], queryFn: Trials.listSubjects });
-  const subjects = subjectsQuery.data ?? [];
-
-  const [subjectId, setSubjectId] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
-  const [selectedSlots, setSelectedSlots] = useState<SelectedSlot[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<number | ''>('');
+  const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const subjectsQuery = useQuery({ queryKey: ['trials', 'subjects'], queryFn: Trials.listSubjects });
+
+  const subjectOptions = useMemo(() => {
+    const list = subjectsQuery.data ?? [];
+    return list.slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [subjectsQuery.data]);
 
   useEffect(() => {
-    if (subjectId === null && subjects.length) {
-      setSubjectId(subjects[0].subjectId);
-    }
-  }, [subjectId, subjects]);
+    if (!subjectOptions.length) return;
+    setSelectedSubject((prev) => (prev ? prev : subjectOptions[0]?.subjectId ?? ''));
+  }, [subjectOptions]);
 
-  const availabilityQuery = useQuery({
-    queryKey: ['trials', 'availability', subjectId],
-    queryFn: () => Trials.listTrialAvailability(subjectId!),
-    enabled: subjectId !== null,
+  const slotsQuery = useQuery({
+    queryKey: ['trials', 'slots', selectedSubject],
+    queryFn: () => Trials.listTrialSlots(Number(selectedSubject)),
+    enabled: typeof selectedSubject === 'number',
   });
 
   useEffect(() => {
-    setSelectedSlots([]);
-  }, [subjectId]);
+    setSelectedSlot(null);
+    setDone(false);
+  }, [selectedSubject]);
 
-  const selectedCount = selectedSlots.length;
+  const teachersWithSlots: TrialSlotDTO[] = useMemo(() => slotsQuery.data ?? [], [slotsQuery.data]);
 
-  const availability = useMemo(() => availabilityQuery.data ?? [], [availabilityQuery.data]);
-
-  const toggleSlot = (slot: SelectedSlot) => {
-    setSelectedSlots((prev) => {
-      const exists = prev.some(
-        (item) => item.teacherId === slot.teacherId && item.startAt === slot.startAt && item.endAt === slot.endAt,
-      );
-      if (exists) {
-        return prev.filter(
-          (item) => !(item.teacherId === slot.teacherId && item.startAt === slot.startAt && item.endAt === slot.endAt),
-        );
-      }
-      if (prev.length >= 3) {
-        return prev;
-      }
-      return [...prev, slot];
-    });
+  const handleSelectSlot = (teacher: TrialSlotDTO, slot: PreferredSlotDTO) => {
+    setSelectedSlot({ ...slot, teacherId: teacher.teacherId, teacherName: teacher.teacherName });
+    setDone(false);
+    setError(null);
   };
 
   const submit = async () => {
-    if (!subjectId) {
-      setError('Selecciona una materia.');
+    if (!selectedSubject) {
+      setError('Selecciona una materia para continuar.');
       return;
     }
-
-    const cleaned = selectedSlots.map((slot) => ({
-      startAt: dayjs(slot.startAt).toISOString(),
-      endAt: dayjs(slot.endAt).toISOString(),
-    }));
-
-    if (cleaned.length === 0) {
-      setError('Selecciona al menos un horario disponible.');
+    if (!selectedSlot) {
+      setError('Selecciona un horario disponible.');
       return;
     }
 
     try {
-      setSubmitting(true);
+      setIsSubmitting(true);
       setError(null);
       await Trials.createTrialRequest({
-        subjectId,
-        preferred: cleaned,
+        subjectId: Number(selectedSubject),
+        preferred: [
+          {
+            startAt: dayjs(selectedSlot.startAt).toISOString(),
+            endAt: dayjs(selectedSlot.endAt).toISOString(),
+            teacherId: selectedSlot.teacherId,
+            teacherName: selectedSlot.teacherName,
+          },
+        ],
         notes: notes.trim() || undefined,
       });
       setDone(true);
@@ -94,95 +107,112 @@ export default function TrialRequestPage() {
       const message = err instanceof Error ? err.message : 'No pudimos registrar tu solicitud.';
       setError(message);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
+  const selectedSubjectData: SubjectDTO | undefined =
+    typeof selectedSubject === 'number'
+      ? subjectOptions.find((item) => item.subjectId === selectedSubject)
+      : undefined;
+
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
-      <Typography variant="h4" gutterBottom>Solicitar clase de prueba</Typography>
+      <Typography variant="h4" gutterBottom>
+        Solicitar clase de prueba
+      </Typography>
       {done ? (
         <Alert severity="success">¡Solicitud enviada! Te contactaremos pronto.</Alert>
       ) : (
         <Stack gap={3}>
           {error && <Alert severity="error">{error}</Alert>}
+          {subjectsQuery.isError && (
+            <Alert severity="error">
+              No pudimos cargar las materias disponibles. Intenta de nuevo en unos minutos.
+            </Alert>
+          )}
           <TextField
             select
             label="Materia"
-            value={subjectId ?? ''}
-            onChange={(event) => {
-              const value = event.target.value;
-              setSubjectId(value === '' ? null : Number(value));
-            }}
+            value={selectedSubject}
+            onChange={(event) => setSelectedSubject(event.target.value ? Number(event.target.value) : '')}
             sx={{ maxWidth: 360 }}
-            disabled={subjectsQuery.isLoading}
-            helperText={subjectsQuery.isError ? 'No pudimos cargar las materias disponibles.' : 'Selecciona la materia que más te interese.'}
+            disabled={subjectsQuery.isLoading || subjectOptions.length === 0}
+            helperText={subjectsQuery.isLoading ? 'Cargando materias…' : undefined}
           >
-            {subjects.map((subject) => (
-              <MenuItem key={subject.subjectId} value={subject.subjectId}>{subject.name}</MenuItem>
+            {subjectOptions.map((subject) => (
+              <MenuItem key={subject.subjectId} value={subject.subjectId}>
+                {subject.name}
+              </MenuItem>
             ))}
           </TextField>
+
           <Stack gap={2}>
-            <Typography variant="h6">Selecciona hasta 3 horarios de 45 minutos</Typography>
-            {availabilityQuery.isLoading ? (
+            <Typography variant="h6">Selecciona un horario de 45 minutos</Typography>
+            {typeof selectedSubject !== 'number' ? (
+              <Alert severity="info">Elige una materia para ver los horarios disponibles.</Alert>
+            ) : slotsQuery.isLoading ? (
               <Box display="flex" justifyContent="center" py={4}>
                 <CircularProgress />
               </Box>
-            ) : availabilityQuery.isError ? (
+            ) : slotsQuery.isError ? (
               <Alert severity="error">No pudimos cargar los horarios disponibles.</Alert>
-            ) : availability.length === 0 ? (
-              <Alert severity="info">No hay horarios disponibles para esta materia en este momento.</Alert>
+            ) : teachersWithSlots.length === 0 ? (
+              <Alert severity="warning">
+                Por ahora no hay horarios disponibles para esta materia. Vuelve a intentarlo más tarde.
+              </Alert>
             ) : (
               <Stack gap={2}>
-                {availability.map((teacher) => (
-                  <Box
-                    key={teacher.teacherId}
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 2,
-                      p: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={600}>{teacher.teacherName}</Typography>
-                    <Stack direction="row" flexWrap="wrap" gap={1.5}>
-                      {teacher.slots.map((slot) => {
-                        const start = dayjs(slot.startAt);
-                        const end = dayjs(slot.endAt);
-                        const key = `${teacher.teacherId}-${slot.startAt}`;
-                        const selected = selectedSlots.some(
-                          (item) => item.teacherId === teacher.teacherId && item.startAt === slot.startAt,
-                        );
-                        const disabled = !selected && selectedCount >= 3;
-                        return (
-                          <Button
-                            key={key}
-                            variant={selected ? 'contained' : 'outlined'}
-                            onClick={() =>
-                              toggleSlot({
-                                teacherId: teacher.teacherId,
-                                startAt: slot.startAt,
-                                endAt: slot.endAt,
-                              })
-                            }
-                            disabled={disabled}
-                          >
-                            {start.format('ddd D MMM HH:mm')} · {end.format('HH:mm')}
-                          </Button>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
+                {teachersWithSlots.map((teacher) => (
+                  <Card key={teacher.teacherId} variant="outlined">
+                    <CardHeader
+                      title={teacher.teacherName}
+                      subheader={
+                        selectedSubjectData?.name
+                          ? `Profesor de ${selectedSubjectData.name}`
+                          : 'Profesor disponible'
+                      }
+                    />
+                    <CardContent>
+                      {teacher.slots.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                          No hay horarios disponibles con este profesor por el momento.
+                        </Typography>
+                      ) : (
+                        <Stack direction="row" flexWrap="wrap" gap={1.5}>
+                          {teacher.slots.map((slot) => {
+                            const key = `${teacher.teacherId}-${slot.startAt}-${slot.endAt}`;
+                            const isSelected =
+                              !!selectedSlot &&
+                              selectedSlot.teacherId === teacher.teacherId &&
+                              selectedSlot.startAt === slot.startAt &&
+                              selectedSlot.endAt === slot.endAt;
+
+                            return (
+                              <Button
+                                key={key}
+                                variant={isSelected ? 'contained' : 'outlined'}
+                                onClick={() => handleSelectSlot(teacher, slot)}
+                                sx={{
+                                  textTransform: 'none',
+                                  justifyContent: 'flex-start',
+                                  minWidth: 220,
+                                  whiteSpace: 'pre-line',
+                                }}
+                              >
+                                {formatSlotLabel(slot)}
+                              </Button>
+                            );
+                          })}
+                        </Stack>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </Stack>
             )}
-            <Typography variant="body2" color="text.secondary">
-              Podrás seleccionar hasta 3 horarios distintos para ayudarte a coordinar la clase.
-            </Typography>
           </Stack>
+
           <TextField
             label="Notas"
             multiline
@@ -191,8 +221,8 @@ export default function TrialRequestPage() {
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Comparte contexto adicional (experiencia, objetivo, etc.)"
           />
-          <Button variant="contained" onClick={submit} size="large" disabled={submitting || !subjectId}>
-            {submitting ? 'Enviando…' : 'Enviar solicitud'}
+          <Button variant="contained" onClick={submit} size="large" disabled={isSubmitting || !selectedSlot}>
+            {isSubmitting ? 'Enviando…' : 'Enviar solicitud'}
           </Button>
         </Stack>
       )}
