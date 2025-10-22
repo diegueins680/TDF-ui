@@ -40,6 +40,12 @@ export type PartyUpdate = Partial<{
   uNotes: string | null;
 }>;
 
+export type BookingResourceDTO = {
+  roomId: string;
+  roomName: string;
+  role: string;
+};
+
 export type BookingDTO = {
   bookingId: number;
   title: string;
@@ -49,6 +55,8 @@ export type BookingDTO = {
   notes?: string | null;
   partyId?: number | null;
   serviceOrderId?: number | null;
+  serviceType?: string | null;
+  resources?: BookingResourceDTO[];
 };
 
 export type PipelineType = 'Mixing' | 'Mastering';
@@ -333,6 +341,14 @@ export type TrialSlotDTO = {
   slots: PreferredSlotDTO[];
 };
 
+export type TrialAvailabilityDTO = {
+  teacherId: number;
+  teacherName: string;
+  subjectId: number;
+  subjectName?: string;
+  slots: PreferredSlotDTO[];
+};
+
 export type TrialRequestCreate = {
   partyId?: number;
   subjectId: number;
@@ -424,4 +440,3 @@ export type CommissionDTO = {
   basisCents: number;
   percent: number;
 };
-
