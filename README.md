@@ -6,6 +6,11 @@ Polished scaffold for TDF Records frontend:
 - **Bookings** calendar using FullCalendar, wired to `/bookings` (GET/POST).
 - **Pipelines** Kanban for Mixing/Mastering (hello-pangea/dnd); API hook present.
 
+### Tema y accesos rápidos
+
+- Cambia entre **modo claro/oscuro** con el botón flotante (esquina inferior derecha). La preferencia se recuerda entre sesiones y sigue al sistema si no eliges manualmente.
+- El botón **Acerca de** en el encabezado muestra la versión del backend y la zona horaria configurada (`VITE_API_BASE`, `VITE_TZ`).
+
 ## Local Development
 ```bash
 npm install

@@ -3,11 +3,13 @@ import { Outlet } from 'react-router-dom';
 import Header from './tdf/Header';
 import Footer from './tdf/Footer';
 import SideNav from './SideNav';
+import AboutDialog from './AboutDialog';
 import { useAuth } from '../auth/AuthProvider';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   const toggleNav = () => {
     setIsNavCollapsed(prev => !prev);
@@ -17,7 +19,12 @@ export default function Layout() {
 
   return (
     <>
-      <Header items={[]} username={user?.username} onLogout={logout} />
+      <Header
+        items={[]}
+        username={user?.username}
+        onLogout={logout}
+        onShowAbout={() => setAboutOpen(true)}
+      />
       <div className={shellClassName}>
         <SideNav collapsed={isNavCollapsed} onToggle={toggleNav} />
         <main className="app-shell__content">
@@ -41,6 +48,7 @@ export default function Layout() {
         </main>
       </div>
       <Footer />
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </>
   );
 }
