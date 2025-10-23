@@ -3,6 +3,11 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
+type SideNavProps = {
+  collapsed: boolean;
+  onToggle: () => void;
+};
+
 const MODULE_TO_PATH: Record<string, string> = {
   'Inicio': '/inicio',
   'CRM': '/crm',
@@ -61,6 +66,14 @@ function canSeeModule(roles: Role[], moduleName: string) {
   return visibility.some(entry => typeof entry === 'string' && (entry === moduleName || entry.startsWith(`${moduleName}.`)));
 }
 
+function buildInitialExpandedState() {
+  const initial: Record<string, boolean> = {};
+  for (const moduleName of topLevel) {
+    initial[moduleName] = false;
+  }
+  return initial;
+}
+
 function allowedSubmenus(roles: Role[], moduleName: string) {
   const all = submenus[moduleName] || [];
   if (all.length === 0) return all;
@@ -82,47 +95,107 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
   return all.filter(label => allowed.has(label));
 }
 
-export default function SideNav() {
+export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
+  const modulesId = React.useId();
+
+  const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(
+    () => buildInitialExpandedState()
+  );
+
+  React.useEffect(() => {
+    if (!collapsed) return;
+    setExpandedModules(buildInitialExpandedState());
+  }, [collapsed]);
+
+  const handleToggleModule = React.useCallback((moduleName: string) => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [moduleName]: !prev[moduleName],
+    }));
+  }, []);
 
   return (
-    <aside className="side-nav" aria-label="Áreas principales">
-      {topLevel.map(moduleName => {
-        const basePath = MODULE_TO_PATH[moduleName];
-        if (!basePath) return null;
-        if (!canSeeModule(roles, moduleName)) return null;
-        const subs = allowedSubmenus(roles, moduleName);
+    <aside
+      className={`side-nav${collapsed ? ' is-collapsed' : ''}`}
+      aria-label="Áreas principales"
+    >
+      <button
+        type="button"
+        className="side-nav__toggle"
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        aria-controls={modulesId}
+        aria-label="Alternar menú principal"
+      >
+        <span className="side-nav__toggle-icon" aria-hidden="true">
+          {collapsed ? '☰' : '✕'}
+        </span>
+        <span className="side-nav__toggle-text">Menú</span>
+      </button>
+      <div id={modulesId} className="side-nav__modules" hidden={collapsed}>
+        {topLevel.map(moduleName => {
+          const basePath = MODULE_TO_PATH[moduleName];
+          if (!basePath) return null;
+          if (!canSeeModule(roles, moduleName)) return null;
+          const subs = allowedSubmenus(roles, moduleName);
 
-        return (
-          <div key={moduleName} className="side-nav__module">
-            <NavLink
-              to={basePath}
-              className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+          return (
+            <div
+              key={moduleName}
+              className={`side-nav__module${expandedModules[moduleName] ? ' is-open' : ''}`}
             >
-              {moduleName}
-            </NavLink>
-            {subs.length > 0 && (
-              <ul className="side-nav__submenu">
-                {subs.map(label => {
-                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
-                  const href = override ?? `${basePath}/${slugify(label)}`;
-                  return (
-                    <li key={label}>
-                      <NavLink
-                        to={href}
-                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
-                      >
-                        {label}
-                      </NavLink>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        );
-      })}
+              <div className="side-nav__module-header">
+                <NavLink
+                  to={basePath}
+                  className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+                >
+                  {moduleName}
+                </NavLink>
+                {subs.length > 0 && (
+                  <button
+                    type="button"
+                    className="side-nav__module-toggle"
+                    onClick={() => handleToggleModule(moduleName)}
+                    aria-expanded={Boolean(expandedModules[moduleName])}
+                    aria-controls={`${modulesId}-${slugify(moduleName)}`}
+                  >
+                    <span className="side-nav__module-toggle-icon" aria-hidden="true">
+                      {expandedModules[moduleName] ? '▾' : '▸'}
+                    </span>
+                    <span className="sr-only">
+                      {expandedModules[moduleName] ? 'Ocultar' : 'Mostrar'} {moduleName}
+                    </span>
+                  </button>
+                )}
+              </div>
+              {subs.length > 0 && (
+                <ul
+                  id={`${modulesId}-${slugify(moduleName)}`}
+                  className="side-nav__submenu"
+                  hidden={!expandedModules[moduleName]}
+                >
+                  {subs.map(label => {
+                    const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                    const href = override ?? `${basePath}/${slugify(label)}`;
+                    return (
+                      <li key={label}>
+                        <NavLink
+                          to={href}
+                          className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
+                        >
+                          {label}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </aside>
   );
 }
