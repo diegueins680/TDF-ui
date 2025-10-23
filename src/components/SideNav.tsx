@@ -90,6 +90,32 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
 export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
+  const location = useLocation();
+  const modulesRootId = React.useId();
+  const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(() => {
+    const active = findActiveModule(location.pathname);
+    return active ? { [active]: true } : {};
+  });
+
+  React.useEffect(() => {
+    const active = findActiveModule(location.pathname);
+    if (active) {
+      setExpandedModules((prev) => {
+        if (prev[active]) {
+          return prev;
+        }
+        return { ...prev, [active]: true };
+      });
+    }
+  }, [location.pathname]);
+
+  const handleToggleModule = React.useCallback((moduleName: string) => {
+    setExpandedModules((prev) => ({
+      ...prev,
+      [moduleName]: !prev[moduleName],
+    }));
+  }, []);
+
   const isCollapsed = Boolean(collapsed);
   const navClassName = `side-nav${isCollapsed ? ' is-collapsed' : ''}`;
 
@@ -108,68 +134,61 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
           </button>
         </div>
       )}
-      {topLevel.map(moduleName => {
+      {topLevel.map((moduleName) => {
         const basePath = MODULE_TO_PATH[moduleName];
         if (!basePath) return null;
         if (!canSeeModule(roles, moduleName)) return null;
         const subs = allowedSubmenus(roles, moduleName);
+        const expanded = Boolean(expandedModules[moduleName]);
+        const submenuId = `${modulesRootId}-${slugify(moduleName)}`;
 
         return (
           <div key={moduleName} className="side-nav__module">
-            <NavLink
-              to={basePath}
-              className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
-            >
-              <div className="side-nav__module-header">
-                <NavLink
-                  to={basePath}
-                  className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
-                >
-                  {moduleName}
-                </NavLink>
-                {subs.length > 0 && (
-                  <button
-                    type="button"
-                    className="side-nav__module-toggle"
-                    onClick={() => handleToggleModule(moduleName)}
-                    aria-expanded={Boolean(expandedModules[moduleName])}
-                    aria-controls={`${modulesId}-${slugify(moduleName)}`}
-                  >
-                    <span className="side-nav__module-toggle-icon" aria-hidden="true">
-                      {expandedModules[moduleName] ? '▾' : '▸'}
-                    </span>
-                    <span className="sr-only">
-                      {expandedModules[moduleName] ? 'Ocultar' : 'Mostrar'} {moduleName}
-                    </span>
-                  </button>
-                )}
-              </div>
+            <div className="side-nav__module-header">
+              <NavLink
+                to={basePath}
+                className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+              >
+                {moduleName}
+              </NavLink>
               {subs.length > 0 && (
-                <ul
-                  id={`${modulesId}-${slugify(moduleName)}`}
-                  className="side-nav__submenu"
-                  hidden={!expandedModules[moduleName]}
+                <button
+                  type="button"
+                  className="side-nav__module-toggle"
+                  onClick={() => handleToggleModule(moduleName)}
+                  aria-expanded={expanded}
+                  aria-controls={submenuId}
                 >
-                  {subs.map(label => {
-                    const override = SUBPATH_OVERRIDES[moduleName]?.[label];
-                    const href = override ?? `${basePath}/${slugify(label)}`;
-                    return (
-                      <li key={label}>
-                        <NavLink
-                          to={href}
-                          className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
-                        >
-                          {label}
-                        </NavLink>
-                      </li>
-                    );
-                  })}
-                </ul>
+                  <span className="side-nav__module-toggle-icon" aria-hidden="true">
+                    {expanded ? '▾' : '▸'}
+                  </span>
+                  <span className="sr-only">
+                    {expanded ? 'Ocultar' : 'Mostrar'} {moduleName}
+                  </span>
+                </button>
               )}
             </div>
-          );
-        })}
-      </div>
+            {subs.length > 0 && (
+              <ul id={submenuId} className="side-nav__submenu" hidden={!expanded}>
+                {subs.map((label) => {
+                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                  const href = override ?? `${basePath}/${slugify(label)}`;
+                  return (
+                    <li key={label}>
+                      <NavLink
+                        to={href}
+                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
+                      >
+                        {label}
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      })}
     </aside>
   );
 }
