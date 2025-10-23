@@ -17,7 +17,7 @@ describe('SideNav submenu toggles', () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
-        <SideNav collapsed={false} onToggle={() => {}} />
+        <SideNav collapsed={false} id="primary-nav" onToggle={() => {}} />
       </MemoryRouter>
     );
 
@@ -34,7 +34,7 @@ describe('SideNav submenu toggles', () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <MemoryRouter>
-        <SideNav collapsed={false} onToggle={() => {}} />
+        <SideNav collapsed={false} id="primary-nav" onToggle={() => {}} />
       </MemoryRouter>
     );
 
@@ -43,7 +43,7 @@ describe('SideNav submenu toggles', () => {
 
     rerender(
       <MemoryRouter>
-        <SideNav collapsed onToggle={() => {}} />
+        <SideNav collapsed id="primary-nav" onToggle={() => {}} />
       </MemoryRouter>
     );
 

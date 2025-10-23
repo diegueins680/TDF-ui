@@ -5,6 +5,7 @@ import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../c
 
 type SideNavProps = {
   collapsed: boolean;
+  id?: string;
   onToggle: () => void;
 };
 
@@ -87,10 +88,12 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
   return all.filter(label => allowed.has(label));
 }
 
-export default function SideNav({ collapsed, onToggle }: SideNavProps) {
+export default function SideNav({ collapsed, id, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
+  const generatedNavId = React.useId();
   const modulesId = React.useId();
+  const navId = id ?? generatedNavId;
 
   const [expandedModules, setExpandedModules] = React.useState(() => new Set<string>());
 
@@ -113,23 +116,25 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
 
   return (
     <aside
-      className={`side-nav${collapsed ? ' is-collapsed' : ''}`}
+      id={navId}
+      className="side-nav"
       aria-label="Áreas principales"
+      hidden={collapsed}
     >
-      <button
-        type="button"
-        className="side-nav__toggle"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-        aria-controls={modulesId}
-        aria-label="Alternar menú principal"
-      >
-        <span className="side-nav__toggle-icon" aria-hidden="true">
-          {collapsed ? '☰' : '✕'}
-        </span>
-        <span className="side-nav__toggle-text">Menú</span>
-      </button>
-      <div id={modulesId} className="side-nav__modules" hidden={collapsed}>
+      <div className="side-nav__header">
+        <button
+          type="button"
+          className="side-nav__dismiss"
+          onClick={onToggle}
+          aria-controls={navId}
+          aria-expanded={!collapsed}
+          aria-label="Ocultar menú principal"
+        >
+          <span className="side-nav__dismiss-icon" aria-hidden="true">✕</span>
+          <span className="side-nav__dismiss-label">Cerrar</span>
+        </button>
+      </div>
+      <div id={modulesId} className="side-nav__modules">
         {topLevel.map(moduleName => {
           const basePath = MODULE_TO_PATH[moduleName];
           if (!basePath) return null;
