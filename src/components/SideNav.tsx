@@ -4,8 +4,8 @@ import { useAuth } from '../auth/AuthProvider';
 import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
 type SideNavProps = {
-  collapsed: boolean;
-  onToggle: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
 };
 
 const MODULE_TO_PATH: Record<string, string> = {
@@ -90,66 +90,35 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
 export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
-  const modulesId = React.useId();
-  const location = useLocation();
-
-  const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const moduleName of topLevel) {
-      initial[moduleName] = false;
-    }
-    const activeModule = findActiveModule(location.pathname);
-    if (activeModule) {
-      initial[activeModule] = true;
-    }
-    return initial;
-  });
-
-  React.useEffect(() => {
-    const activeModule = findActiveModule(location.pathname);
-    if (!activeModule) return;
-    setExpandedModules(prev => {
-      if (prev[activeModule]) return prev;
-      return { ...prev, [activeModule]: true };
-    });
-  }, [location.pathname]);
-
-  const handleToggleModule = React.useCallback((moduleName: string) => {
-    setExpandedModules(prev => ({
-      ...prev,
-      [moduleName]: !prev[moduleName],
-    }));
-  }, []);
+  const isCollapsed = Boolean(collapsed);
+  const navClassName = `side-nav${isCollapsed ? ' is-collapsed' : ''}`;
 
   return (
     <aside
-      className={`side-nav${collapsed ? ' is-collapsed' : ''}`}
+      id="app-side-nav"
+      className={navClassName}
       aria-label="Áreas principales"
+      aria-hidden={isCollapsed}
     >
-      <button
-        type="button"
-        className="side-nav__toggle"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-        aria-controls={modulesId}
-        aria-label="Alternar menú principal"
-      >
-        <span className="side-nav__toggle-icon" aria-hidden="true">
-          {collapsed ? '☰' : '✕'}
-        </span>
-        <span className="side-nav__toggle-text">Menú</span>
-      </button>
-      <div id={modulesId} className="side-nav__modules" hidden={collapsed}>
-        {topLevel.map(moduleName => {
-          const basePath = MODULE_TO_PATH[moduleName];
-          if (!basePath) return null;
-          if (!canSeeModule(roles, moduleName)) return null;
-          const subs = allowedSubmenus(roles, moduleName);
+      {!isCollapsed && onToggle && (
+        <div className="side-nav__header">
+          <button type="button" className="side-nav__dismiss" onClick={onToggle}>
+            <span aria-hidden="true">✕</span>
+            <span className="side-nav__dismiss-label">Cerrar</span>
+          </button>
+        </div>
+      )}
+      {topLevel.map(moduleName => {
+        const basePath = MODULE_TO_PATH[moduleName];
+        if (!basePath) return null;
+        if (!canSeeModule(roles, moduleName)) return null;
+        const subs = allowedSubmenus(roles, moduleName);
 
-          return (
-            <div
-              key={moduleName}
-              className={`side-nav__module${expandedModules[moduleName] ? ' is-open' : ''}`}
+        return (
+          <div key={moduleName} className="side-nav__module">
+            <NavLink
+              to={basePath}
+              className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
             >
               <div className="side-nav__module-header">
                 <NavLink
