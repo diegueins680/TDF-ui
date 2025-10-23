@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './tdf/Header';
 import Footer from './tdf/Footer';
@@ -7,13 +7,13 @@ import { useAuth } from '../auth/AuthProvider';
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const [isNavCollapsed, setIsNavCollapsed] = useState(true);
+  const [isNavCollapsed, setNavCollapsed] = useState(true);
+  const navId = useId();
 
-  const toggleNav = () => {
-    setIsNavCollapsed(prev => !prev);
-  };
-
-  const shellClassName = `app-shell${isNavCollapsed ? ' app-shell--nav-collapsed' : ' app-shell--nav-expanded'}`;
+  const shellClassName = [
+    'app-shell',
+    isNavCollapsed ? 'app-shell--nav-collapsed' : 'app-shell--nav-expanded',
+  ].join(' ');
 
   return (
     <>
