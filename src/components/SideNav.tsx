@@ -3,6 +3,11 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
+type SideNavProps = {
+  collapsed?: boolean;
+  onToggle?: () => void;
+};
+
 const MODULE_TO_PATH: Record<string, string> = {
   'Inicio': '/inicio',
   'CRM': '/crm',
@@ -82,12 +87,27 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
   return all.filter(label => allowed.has(label));
 }
 
-export default function SideNav() {
+export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
+  const isCollapsed = Boolean(collapsed);
+  const navClassName = `side-nav${isCollapsed ? ' is-collapsed' : ''}`;
 
   return (
-    <aside className="side-nav" aria-label="Áreas principales">
+    <aside
+      id="app-side-nav"
+      className={navClassName}
+      aria-label="Áreas principales"
+      aria-hidden={isCollapsed}
+    >
+      {!isCollapsed && onToggle && (
+        <div className="side-nav__header">
+          <button type="button" className="side-nav__dismiss" onClick={onToggle}>
+            <span aria-hidden="true">✕</span>
+            <span className="side-nav__dismiss-label">Cerrar</span>
+          </button>
+        </div>
+      )}
       {topLevel.map(moduleName => {
         const basePath = MODULE_TO_PATH[moduleName];
         if (!basePath) return null;
