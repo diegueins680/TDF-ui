@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
@@ -120,29 +120,79 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
               to={basePath}
               className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
             >
-              {moduleName}
-            </NavLink>
-            {subs.length > 0 && (
-              <ul className="side-nav__submenu">
-                {subs.map(label => {
-                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
-                  const href = override ?? `${basePath}/${slugify(label)}`;
-                  return (
-                    <li key={label}>
-                      <NavLink
-                        to={href}
-                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
-                      >
-                        {label}
-                      </NavLink>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        );
-      })}
+              <div className="side-nav__module-header">
+                <NavLink
+                  to={basePath}
+                  className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+                >
+                  {moduleName}
+                </NavLink>
+                {subs.length > 0 && (
+                  <button
+                    type="button"
+                    className="side-nav__module-toggle"
+                    onClick={() => handleToggleModule(moduleName)}
+                    aria-expanded={Boolean(expandedModules[moduleName])}
+                    aria-controls={`${modulesId}-${slugify(moduleName)}`}
+                  >
+                    <span className="side-nav__module-toggle-icon" aria-hidden="true">
+                      {expandedModules[moduleName] ? '▾' : '▸'}
+                    </span>
+                    <span className="sr-only">
+                      {expandedModules[moduleName] ? 'Ocultar' : 'Mostrar'} {moduleName}
+                    </span>
+                  </button>
+                )}
+              </div>
+              {subs.length > 0 && (
+                <ul
+                  id={`${modulesId}-${slugify(moduleName)}`}
+                  className="side-nav__submenu"
+                  hidden={!expandedModules[moduleName]}
+                >
+                  {subs.map(label => {
+                    const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                    const href = override ?? `${basePath}/${slugify(label)}`;
+                    return (
+                      <li key={label}>
+                        <NavLink
+                          to={href}
+                          className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
+                        >
+                          {label}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </aside>
   );
+}
+
+function findActiveModule(pathname: string) {
+  for (const moduleName of topLevel) {
+    if (pathMatchesModule(pathname, moduleName)) {
+      return moduleName;
+    }
+  }
+  return null;
+}
+
+function pathMatchesModule(pathname: string, moduleName: string) {
+  const basePath = MODULE_TO_PATH[moduleName];
+  if (!basePath) return false;
+  if (pathname === basePath || pathname.startsWith(`${basePath}/`)) {
+    return true;
+  }
+
+  const overrides = SUBPATH_OVERRIDES[moduleName];
+  if (!overrides) return false;
+  return Object.values(overrides).some(overridePath => {
+    return pathname === overridePath || pathname.startsWith(`${overridePath}/`);
+  });
 }
