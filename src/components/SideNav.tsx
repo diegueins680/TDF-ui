@@ -1,12 +1,11 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../config/menu';
 
 type SideNavProps = {
-  collapsed: boolean;
-  id?: string;
-  onToggle: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
 };
 
 const MODULE_TO_PATH: Record<string, string> = {
@@ -67,6 +66,14 @@ function canSeeModule(roles: Role[], moduleName: string) {
   return visibility.some(entry => typeof entry === 'string' && (entry === moduleName || entry.startsWith(`${moduleName}.`)));
 }
 
+function buildInitialExpandedState() {
+  const initial: Record<string, boolean> = {};
+  for (const moduleName of topLevel) {
+    initial[moduleName] = false;
+  }
+  return initial;
+}
+
 function allowedSubmenus(roles: Role[], moduleName: string) {
   const all = submenus[moduleName] || [];
   if (all.length === 0) return all;
@@ -88,115 +95,131 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
   return all.filter(label => allowed.has(label));
 }
 
-export default function SideNav({ collapsed, id, onToggle }: SideNavProps) {
+export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
-  const generatedNavId = React.useId();
-  const modulesId = React.useId();
-  const navId = id ?? generatedNavId;
-
-  const [expandedModules, setExpandedModules] = React.useState(() => new Set<string>());
+  const location = useLocation();
+  const modulesRootId = React.useId();
+  const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(() => {
+    const active = findActiveModule(location.pathname);
+    return active ? { [active]: true } : {};
+  });
 
   React.useEffect(() => {
-    if (!collapsed) return;
-    setExpandedModules(new Set<string>());
-  }, [collapsed]);
+    const active = findActiveModule(location.pathname);
+    if (active) {
+      setExpandedModules((prev) => {
+        if (prev[active]) {
+          return prev;
+        }
+        return { ...prev, [active]: true };
+      });
+    }
+  }, [location.pathname]);
 
   const handleToggleModule = React.useCallback((moduleName: string) => {
-    setExpandedModules(prev => {
-      const next = new Set(prev);
-      if (next.has(moduleName)) {
-        next.delete(moduleName);
-      } else {
-        next.add(moduleName);
-      }
-      return next;
-    });
+    setExpandedModules((prev) => ({
+      ...prev,
+      [moduleName]: !prev[moduleName],
+    }));
   }, []);
+
+  const isCollapsed = Boolean(collapsed);
+  const navClassName = `side-nav${isCollapsed ? ' is-collapsed' : ''}`;
 
   return (
     <aside
-      id={navId}
-      className="side-nav"
+      id="app-side-nav"
+      className={navClassName}
       aria-label="Áreas principales"
-      hidden={collapsed}
+      aria-hidden={isCollapsed}
     >
-      <div className="side-nav__header">
-        <button
-          type="button"
-          className="side-nav__dismiss"
-          onClick={onToggle}
-          aria-controls={navId}
-          aria-expanded={!collapsed}
-          aria-label="Ocultar menú principal"
-        >
-          <span className="side-nav__dismiss-icon" aria-hidden="true">✕</span>
-          <span className="side-nav__dismiss-label">Cerrar</span>
-        </button>
-      </div>
-      <div id={modulesId} className="side-nav__modules">
-        {topLevel.map(moduleName => {
-          const basePath = MODULE_TO_PATH[moduleName];
-          if (!basePath) return null;
-          if (!canSeeModule(roles, moduleName)) return null;
-          const subs = allowedSubmenus(roles, moduleName);
-          const isExpanded = expandedModules.has(moduleName);
-          const submenuId = `${modulesId}-${slugify(moduleName)}`;
+      {!isCollapsed && onToggle && (
+        <div className="side-nav__header">
+          <button type="button" className="side-nav__dismiss" onClick={onToggle}>
+            <span aria-hidden="true">✕</span>
+            <span className="side-nav__dismiss-label">Cerrar</span>
+          </button>
+        </div>
+      )}
+      {topLevel.map((moduleName) => {
+        const basePath = MODULE_TO_PATH[moduleName];
+        if (!basePath) return null;
+        if (!canSeeModule(roles, moduleName)) return null;
+        const subs = allowedSubmenus(roles, moduleName);
+        const expanded = Boolean(expandedModules[moduleName]);
+        const submenuId = `${modulesRootId}-${slugify(moduleName)}`;
 
-          return (
-            <div
-              key={moduleName}
-              className={`side-nav__module${isExpanded ? ' is-open' : ''}`}
-            >
-              <div className="side-nav__module-header">
-                <NavLink
-                  to={basePath}
-                  className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+        return (
+          <div key={moduleName} className="side-nav__module">
+            <div className="side-nav__module-header">
+              <NavLink
+                to={basePath}
+                className={({ isActive }) => `side-nav__module-link${isActive ? ' is-active' : ''}`}
+              >
+                {moduleName}
+              </NavLink>
+              {subs.length > 0 && (
+                <button
+                  type="button"
+                  className="side-nav__module-toggle"
+                  onClick={() => handleToggleModule(moduleName)}
+                  aria-expanded={expanded}
+                  aria-controls={submenuId}
                 >
-                  {moduleName}
-                </NavLink>
-                {subs.length > 0 && (
-                  <button
-                    type="button"
-                    className="side-nav__module-toggle"
-                    onClick={() => handleToggleModule(moduleName)}
-                    aria-expanded={isExpanded}
-                    aria-controls={submenuId}
-                  >
-                    <span className="side-nav__module-toggle-icon" aria-hidden="true">
-                      {isExpanded ? '▾' : '▸'}
-                    </span>
-                    <span className="sr-only">
-                      {isExpanded ? 'Ocultar' : 'Mostrar'} {moduleName}
-                    </span>
-                  </button>
-                )}
-              </div>
-              {subs.length > 0 && isExpanded && (
-                <ul
-                  id={submenuId}
-                  className="side-nav__submenu"
-                >
-                  {subs.map(label => {
-                    const override = SUBPATH_OVERRIDES[moduleName]?.[label];
-                    const href = override ?? `${basePath}/${slugify(label)}`;
-                    return (
-                      <li key={label}>
-                        <NavLink
-                          to={href}
-                          className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
-                        >
-                          {label}
-                        </NavLink>
-                      </li>
-                    );
-                  })}
-                </ul>
+                  <span className="side-nav__module-toggle-icon" aria-hidden="true">
+                    {expanded ? '▾' : '▸'}
+                  </span>
+                  <span className="sr-only">
+                    {expanded ? 'Ocultar' : 'Mostrar'} {moduleName}
+                  </span>
+                </button>
               )}
             </div>
-          );
-        })}
-      </div>
+            {subs.length > 0 && (
+              <ul id={submenuId} className="side-nav__submenu" hidden={!expanded}>
+                {subs.map((label) => {
+                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                  const href = override ?? `${basePath}/${slugify(label)}`;
+                  return (
+                    <li key={label}>
+                      <NavLink
+                        to={href}
+                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
+                      >
+                        {label}
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      })}
     </aside>
   );
+}
+
+function findActiveModule(pathname: string) {
+  for (const moduleName of topLevel) {
+    if (pathMatchesModule(pathname, moduleName)) {
+      return moduleName;
+    }
+  }
+  return null;
+}
+
+function pathMatchesModule(pathname: string, moduleName: string) {
+  const basePath = MODULE_TO_PATH[moduleName];
+  if (!basePath) return false;
+  if (pathname === basePath || pathname.startsWith(`${basePath}/`)) {
+    return true;
+  }
+
+  const overrides = SUBPATH_OVERRIDES[moduleName];
+  if (!overrides) return false;
+  return Object.values(overrides).some(overridePath => {
+    return pathname === overridePath || pathname.startsWith(`${overridePath}/`);
+  });
 }

@@ -19,25 +19,22 @@ export default function Layout() {
     <>
       <Header items={[]} username={user?.username} onLogout={logout} />
       <div className={shellClassName}>
-        <button
-          type="button"
-          className="side-nav-toggle"
-          onClick={() => setNavCollapsed(value => !value)}
-          aria-expanded={!isNavCollapsed}
-          aria-controls={navId}
-          aria-label={isNavCollapsed ? 'Mostrar menú principal' : 'Ocultar menú principal'}
-        >
-          <span className="side-nav-toggle__icon" aria-hidden="true">
-            {isNavCollapsed ? '☰' : '✕'}
-          </span>
-          <span className="side-nav-toggle__label">Menú</span>
-        </button>
-        <SideNav
-          collapsed={isNavCollapsed}
-          id={navId}
-          onToggle={() => setNavCollapsed(value => !value)}
-        />
+        <SideNav collapsed={isNavCollapsed} onToggle={toggleNav} />
         <main className="app-shell__content">
+          <button
+            type="button"
+            className="side-nav-toggle"
+            onClick={toggleNav}
+            aria-expanded={!isNavCollapsed}
+            aria-controls="app-side-nav"
+          >
+            <span className="side-nav-toggle__icon" aria-hidden="true">
+              {isNavCollapsed ? '☰' : '✕'}
+            </span>
+            <span className="side-nav-toggle__label">
+              {isNavCollapsed ? 'Abrir menú' : 'Cerrar menú'}
+            </span>
+          </button>
           <div className="container stack-lg">
             <Outlet />
           </div>
