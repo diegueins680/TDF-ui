@@ -66,14 +66,6 @@ function canSeeModule(roles: Role[], moduleName: string) {
   return visibility.some(entry => typeof entry === 'string' && (entry === moduleName || entry.startsWith(`${moduleName}.`)));
 }
 
-function buildInitialExpandedState() {
-  const initial: Record<string, boolean> = {};
-  for (const moduleName of topLevel) {
-    initial[moduleName] = false;
-  }
-  return initial;
-}
-
 function allowedSubmenus(roles: Role[], moduleName: string) {
   const all = submenus[moduleName] || [];
   if (all.length === 0) return all;
@@ -100,20 +92,23 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
   const roles = normalizeRoles(user?.roles);
   const modulesId = React.useId();
 
-  const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(
-    () => buildInitialExpandedState()
-  );
+  const [expandedModules, setExpandedModules] = React.useState(() => new Set<string>());
 
   React.useEffect(() => {
     if (!collapsed) return;
-    setExpandedModules(buildInitialExpandedState());
+    setExpandedModules(new Set<string>());
   }, [collapsed]);
 
   const handleToggleModule = React.useCallback((moduleName: string) => {
-    setExpandedModules(prev => ({
-      ...prev,
-      [moduleName]: !prev[moduleName],
-    }));
+    setExpandedModules(prev => {
+      const next = new Set(prev);
+      if (next.has(moduleName)) {
+        next.delete(moduleName);
+      } else {
+        next.add(moduleName);
+      }
+      return next;
+    });
   }, []);
 
   return (
@@ -140,7 +135,7 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
           if (!basePath) return null;
           if (!canSeeModule(roles, moduleName)) return null;
           const subs = allowedSubmenus(roles, moduleName);
-          const isExpanded = Boolean(expandedModules[moduleName]);
+          const isExpanded = expandedModules.has(moduleName);
           const submenuId = `${modulesId}-${slugify(moduleName)}`;
 
           return (
