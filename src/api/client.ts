@@ -165,19 +165,6 @@ export type Payment = {
   method?: string;
 };
 
-export type Receipt = {
-  id: string;
-  number: string;
-  issueDate: string;
-  studentName: string;
-  studentEmail?: string;
-  packageName: string;
-  amountCents: number;
-  currency: string;
-  notes?: string;
-  teacherName?: string;
-  organization?: string;
-};
 
 export function cents(amountCents: number, currency: string) {
   const amount = (amountCents ?? 0) / 100;
@@ -200,5 +187,4 @@ export const tdfApi = {
   studentsByTeacher: (teacherId: string) =>
     get<Array<{ id: string; name: string; email?: string }>>(`/teachers/${teacherId}/students`),
   listPayments: () => get<Payment[]>('/payments'),
-  getReceipt: (receiptId: string) => get<Receipt>(`/receipts/${receiptId}`),
 };
