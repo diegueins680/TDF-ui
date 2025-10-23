@@ -66,6 +66,14 @@ function canSeeModule(roles: Role[], moduleName: string) {
   return visibility.some(entry => typeof entry === 'string' && (entry === moduleName || entry.startsWith(`${moduleName}.`)));
 }
 
+function buildInitialExpandedState() {
+  const initial: Record<string, boolean> = {};
+  for (const moduleName of topLevel) {
+    initial[moduleName] = false;
+  }
+  return initial;
+}
+
 function allowedSubmenus(roles: Role[], moduleName: string) {
   const all = submenus[moduleName] || [];
   if (all.length === 0) return all;
