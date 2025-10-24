@@ -189,6 +189,10 @@ body {
   gap: 0.35rem;
 }
 
+.side-nav__submenu[hidden] {
+  display: none !important;
+}
+
 .side-nav__sublink {
   display: block;
   padding: 0.35rem 0.6rem;
