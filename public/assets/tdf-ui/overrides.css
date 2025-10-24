@@ -194,6 +194,10 @@
   padding-left:1.5rem;
 }
 
+.side-nav__submenu[hidden]{
+  display:none !important;
+}
+
 .side-nav-toggle{
   grid-column:1 / -1;
   position:sticky;
