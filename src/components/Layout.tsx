@@ -10,6 +10,10 @@ export default function Layout() {
   const [isNavCollapsed, setNavCollapsed] = useState(true);
   const navId = useId();
 
+  const toggleNav = () => {
+    setNavCollapsed(prev => !prev);
+  };
+
   const shellClassName = [
     'app-shell',
     isNavCollapsed ? 'app-shell--nav-collapsed' : 'app-shell--nav-expanded',
@@ -19,14 +23,14 @@ export default function Layout() {
     <>
       <Header items={[]} username={user?.username} onLogout={logout} />
       <div className={shellClassName}>
-        <SideNav collapsed={isNavCollapsed} onToggle={toggleNav} />
+        <SideNav id={navId} collapsed={isNavCollapsed} onToggle={toggleNav} />
         <main className="app-shell__content">
           <button
             type="button"
             className="side-nav-toggle"
             onClick={toggleNav}
             aria-expanded={!isNavCollapsed}
-            aria-controls="app-side-nav"
+            aria-controls={navId}
           >
             <span className="side-nav-toggle__icon" aria-hidden="true">
               {isNavCollapsed ? '☰' : '✕'}

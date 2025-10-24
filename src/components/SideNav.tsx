@@ -6,6 +6,7 @@ import { topLevel, submenus, visibilityByRole, Role, normalizeRoles } from '../c
 type SideNavProps = {
   collapsed?: boolean;
   onToggle?: () => void;
+  id?: string;
 };
 
 const MODULE_TO_PATH: Record<string, string> = {
@@ -95,7 +96,7 @@ function allowedSubmenus(roles: Role[], moduleName: string) {
   return all.filter(label => allowed.has(label));
 }
 
-export default function SideNav({ collapsed, onToggle }: SideNavProps) {
+export default function SideNav({ collapsed, onToggle, id }: SideNavProps) {
   const { user } = useAuth();
   const roles = normalizeRoles(user?.roles);
   const location = useLocation();
@@ -129,7 +130,7 @@ export default function SideNav({ collapsed, onToggle }: SideNavProps) {
 
   return (
     <aside
-      id="app-side-nav"
+      id={id ?? 'app-side-nav'}
       className={navClassName}
       aria-label="Áreas principales"
       aria-hidden={isCollapsed}
