@@ -19,6 +19,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
+import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
@@ -428,6 +429,7 @@ function PartyDetailDialog({
   }, [open, party?.partyId]);
 
   const partyId = party?.partyId ?? null;
+  const pipelineCards = usePipelineCardsForParty(party);
 
   const bookingsQuery = useQuery({
     queryKey: ['party-bookings', partyId],
@@ -474,6 +476,27 @@ function PartyDetailDialog({
               <Typography variant="body2">RUC / CI: {party?.taxId ?? '—'}</Typography>
               <Typography variant="body2">Contacto de emergencia: {party?.emergencyContact ?? '—'}</Typography>
               <Typography variant="body2">Notas: {party?.notes ?? '—'}</Typography>
+            </Stack>
+            <Divider />
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">Pipeline</Typography>
+              {pipelineCards.length > 0 ? (
+                <Stack spacing={0.75}>
+                  {pipelineCards.map(card => (
+                    <Stack key={card.id} direction="row" spacing={1} alignItems="center">
+                      <Chip size="small" color="primary" label={card.type} />
+                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                        {card.title}
+                      </Typography>
+                      <Chip size="small" variant="outlined" label={card.stage} />
+                    </Stack>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No hay proyectos en pipeline para este contacto.
+                </Typography>
+              )}
             </Stack>
           </Stack>
         )}
