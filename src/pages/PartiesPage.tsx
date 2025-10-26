@@ -19,6 +19,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
+import { listByParty as listPipelinesByParty } from '../api/pipelines';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
@@ -441,6 +442,12 @@ function PartyDetailDialog({
     enabled: open && tab === 'invoices' && !!partyId,
   });
 
+  const pipelinesQuery = useQuery({
+    queryKey: ['party-pipelines', partyId],
+    queryFn: () => (partyId ? listPipelinesByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'overview' && !!partyId,
+  });
+
   const formatDate = (value: string) => new Date(value).toLocaleString();
   const formatCurrency = (cents: number) => (cents / 100).toLocaleString('es-EC', { style: 'currency', currency: 'USD' });
 
@@ -474,6 +481,38 @@ function PartyDetailDialog({
               <Typography variant="body2">RUC / CI: {party?.taxId ?? '—'}</Typography>
               <Typography variant="body2">Contacto de emergencia: {party?.emergencyContact ?? '—'}</Typography>
               <Typography variant="body2">Notas: {party?.notes ?? '—'}</Typography>
+            </Stack>
+            <Divider />
+            <Stack spacing={1}>
+              <Typography variant="subtitle1">Pipeline</Typography>
+              {pipelinesQuery.isPending && (
+                <CircularProgress size={20} sx={{ alignSelf: 'flex-start', mt: 0.5 }} />
+              )}
+              {pipelinesQuery.isError && (
+                <Alert severity="error">{(pipelinesQuery.error as Error).message}</Alert>
+              )}
+              {!pipelinesQuery.isPending && !pipelinesQuery.isError && (
+                pipelinesQuery.data && pipelinesQuery.data.length > 0 ? (
+                  <Stack spacing={1}>
+                    {pipelinesQuery.data.map((card) => (
+                      <Paper key={card.id} variant="outlined" sx={{ p: 1.25 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                          <Typography variant="body2" fontWeight={600}>{card.title}</Typography>
+                          <Chip label={card.stage} color="primary" size="small" />
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {card.type}
+                          {card.artist ? ` • ${card.artist}` : ''}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Este contacto no tiene proyectos en pipeline todavía.
+                  </Typography>
+                )
+              )}
             </Stack>
           </Stack>
         )}

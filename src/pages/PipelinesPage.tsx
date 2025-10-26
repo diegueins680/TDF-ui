@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Paper, Stack, Typography, Box, Chip, Divider } from '@mui/material';
 import type { PipelineCard } from '../api/types';
-import { updateStage } from '../api/pipelines';
+import { getDemoPipelineCards, updateStage } from '../api/pipelines';
 
 const MIXING = ['Brief','Prep','v1 Sent','Revisions','Approved','Delivered'] as const;
 const MASTERING = ['Brief','v1','Revisions','Approved','DDP Delivered'] as const;
@@ -44,12 +44,7 @@ function Column({ id, title, jobs }: { id: string; title: string; jobs: Pipeline
 }
 
 export default function PipelinesPage() {
-  const [jobs, setJobs] = useState<PipelineCard[]>([
-    { id: 'mx-1', title: 'Arkabuz - Single A', artist: 'Arkabuz', type: 'Mixing', stage: 'Brief' },
-    { id: 'mx-2', title: 'Quimika - EP', artist: 'Quimika Soul', type: 'Mixing', stage: 'Prep' },
-    { id: 'ma-1', title: 'Skanka Fe - LP', artist: 'Skanka Fe', type: 'Mastering', stage: 'v1' },
-    { id: 'ma-2', title: 'El Bloque - Single', artist: 'El Bloque', type: 'Mastering', stage: 'Approved' },
-  ]);
+  const [jobs, setJobs] = useState<PipelineCard[]>(() => getDemoPipelineCards());
 
   const columns = useMemo(() => {
     const groups: Record<string, PipelineCard[]> = {};
