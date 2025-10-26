@@ -2,15 +2,8 @@
 import { useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Paper, Stack, Typography, Box, Chip, Divider } from '@mui/material';
-import { updateStage } from '../api/pipelines';
-import {
-  usePipelineCards,
-  findPipelineCard,
-  updatePipelineCardStage,
-  MIXING_STAGES,
-  MASTERING_STAGES,
-  type PipelineBoardCard,
-} from '../features/pipelines/pipelineStore';
+import type { PipelineCard } from '../api/types';
+import { getDemoPipelineCards, updateStage } from '../api/pipelines';
 
 function Column({ id, title, jobs }: { id: string; title: string; jobs: PipelineBoardCard[] }) {
   return (
@@ -48,7 +41,7 @@ function Column({ id, title, jobs }: { id: string; title: string; jobs: Pipeline
 }
 
 export default function PipelinesPage() {
-  const jobs = usePipelineCards();
+  const [jobs, setJobs] = useState<PipelineCard[]>(() => getDemoPipelineCards());
 
   const columns = useMemo(() => {
     const groups: Record<string, PipelineBoardCard[]> = {};
