@@ -1,7 +1,8 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bookings, CreateBookingReq } from '../api/bookings';
-import type { BookingDTO } from '../api/types';
+import { Parties } from '../api/parties';
+import type { BookingDTO, PartyDTO } from '../api/types';
 import { Typography, Paper, Stack, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem } from '@mui/material';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +22,8 @@ const schema = z.object({
   cbTitle: z.string().min(2, 'Título requerido'),
   cbStartsAt: z.string(),
   cbEndsAt: z.string(),
-  cbStatus: z.enum(['Confirmed','Tentative','Cancelled','Completed']).default('Confirmed')
+  cbStatus: z.enum(['Confirmed','Tentative','Cancelled','Completed']).default('Confirmed'),
+  cbPartyId: z.number().nullable().optional(),
 });
 
 function formatDateTimeLocal(value?: string) {
@@ -64,8 +66,21 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
   const qc = useQueryClient();
   const { handleSubmit, register, setValue, formState: { errors } } = useForm<CreateBookingReq>({
     resolver: zodResolver(schema),
-    defaultValues: { cbTitle: 'New Booking', cbStartsAt: '', cbEndsAt: '', cbStatus: 'Confirmed' }
+    defaultValues: { cbTitle: 'New Booking', cbStartsAt: '', cbEndsAt: '', cbStatus: 'Confirmed', cbPartyId: null }
   });
+
+  const [artistOptions, setArtistOptions] = useState<PartyDTO[]>([]);
+  const { data: artistContacts } = useQuery({
+    queryKey: ['parties', 'artists'],
+    queryFn: () => Parties.listByRole('Artist'),
+    enabled: open,
+  });
+
+  useEffect(() => {
+    if (artistContacts) {
+      setArtistOptions(artistContacts);
+    }
+  }, [artistContacts]);
 
   useEffect(()=>{
     setValue('cbStartsAt', formatDateTimeLocal(initialStart));
@@ -88,6 +103,21 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
           <TextField select label="Estado" {...register('cbStatus')} defaultValue="Confirmed">
             {['Confirmed','Tentative','Cancelled','Completed'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
           </TextField>
+          <TextField
+            select
+            label="Artista"
+            defaultValue=""
+            {...register('cbPartyId', {
+              setValueAs: (value) => (value === '' ? null : Number(value)),
+            })}
+          >
+            <MenuItem value="">Sin artista</MenuItem>
+            {artistOptions.map((artist) => (
+              <MenuItem key={artist.partyId} value={String(artist.partyId)}>
+                {artist.displayName}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -96,6 +126,7 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
           ...vals,
           cbStartsAt: new Date(vals.cbStartsAt).toISOString(),
           cbEndsAt: new Date(vals.cbEndsAt).toISOString(),
+          cbPartyId: vals.cbPartyId ?? null,
         }))} disabled={m.isPending}>Guardar</Button>
       </DialogActions>
     </Dialog>
