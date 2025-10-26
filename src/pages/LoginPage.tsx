@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from '../auth/AuthProvider';
+import { Logo } from '../components/Logo';
 
 type LocationState = {
   from?: { pathname: string };
@@ -62,11 +63,9 @@ export default function LoginPage() {
       <Card sx={{ width: 360 }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2 }}>
-            <Box
-              component="img"
-              src="/assets/tdf-ui/tdf_logo_black.svg"
+            <Logo
               alt="TDF Records"
-              sx={{ maxWidth: '12rem', width: '100%', height: 'auto' }}
+              style={{ width: '12rem', maxWidth: '100%', height: 'auto', maxHeight: 'none' }}
             />
           </Box>
           <Stack component="form" onSubmit={handleSubmit} spacing={2}>

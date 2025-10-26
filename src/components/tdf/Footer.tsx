@@ -1,9 +1,11 @@
+import { Logo } from '../Logo';
+
 export default function Footer(){
   return (
     <footer className="site-footer">
       <div className="container cluster" style={{justifyContent:"space-between"}}>
         <div className="cluster">
-          <img className="brand-logo" src="/assets/tdf-ui/tdf_logo_black.svg" alt="TDF Records"/>
+          <Logo className="brand-logo" alt="TDF Records" />
           <span>&copy; {new Date().getFullYear()} TDF Records</span>
         </div>
         <div className="cluster">
