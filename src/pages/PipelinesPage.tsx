@@ -1,14 +1,11 @@
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Paper, Stack, Typography, Box, Chip, Divider } from '@mui/material';
 import type { PipelineCard } from '../api/types';
 import { getDemoPipelineCards, updateStage } from '../api/pipelines';
 
-const MIXING = ['Brief','Prep','v1 Sent','Revisions','Approved','Delivered'] as const;
-const MASTERING = ['Brief','v1','Revisions','Approved','DDP Delivered'] as const;
-
-function Column({ id, title, jobs }: { id: string; title: string; jobs: PipelineCard[] }) {
+function Column({ id, title, jobs }: { id: string; title: string; jobs: PipelineBoardCard[] }) {
   return (
     <Paper
       sx={{ p: 1, minWidth: 280, height: '70vh', display: 'flex', flexDirection: 'column' }}
@@ -47,8 +44,8 @@ export default function PipelinesPage() {
   const [jobs, setJobs] = useState<PipelineCard[]>(() => getDemoPipelineCards());
 
   const columns = useMemo(() => {
-    const groups: Record<string, PipelineCard[]> = {};
-    [...MIXING, ...MASTERING].forEach(s => { groups[s] = []; });
+    const groups: Record<string, PipelineBoardCard[]> = {};
+    [...MIXING_STAGES, ...MASTERING_STAGES].forEach(s => { groups[s] = []; });
     jobs.forEach(j => { (groups[j.stage] = groups[j.stage] || []).push(j); });
     return groups;
   }, [jobs]);
@@ -58,9 +55,9 @@ export default function PipelinesPage() {
     if (!destination) return;
     const from = source.droppableId, to = destination.droppableId;
     if (from === to) return;
-    const card = jobs.find(j => j.id === draggableId);
+    const card = findPipelineCard(draggableId);
     if (!card) return;
-    setJobs(prev => prev.map(j => j.id === draggableId ? { ...j, stage: to } : j));
+    updatePipelineCardStage(draggableId, to);
     // Hook to backend (safe no-op if endpoint not present yet)
     updateStage(card, to).catch(() => {});
   };
@@ -71,8 +68,8 @@ export default function PipelinesPage() {
       <Divider sx={{ mb: 2 }} />
       <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto' }}>
         <DragDropContext onDragEnd={onDragEnd}>
-          {MIXING.map(s => <Column key={s} id={s} title={`Mixing: ${s}`} jobs={columns[s] || []} />)}
-          {MASTERING.map(s => <Column key={s} id={s} title={`Mastering: ${s}`} jobs={columns[s] || []} />)}
+          {MIXING_STAGES.map(s => <Column key={s} id={s} title={`Mixing: ${s}`} jobs={columns[s] || []} />)}
+          {MASTERING_STAGES.map(s => <Column key={s} id={s} title={`Mastering: ${s}`} jobs={columns[s] || []} />)}
         </DragDropContext>
       </Box>
     </>

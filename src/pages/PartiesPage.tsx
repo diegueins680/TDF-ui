@@ -429,6 +429,7 @@ function PartyDetailDialog({
   }, [open, party?.partyId]);
 
   const partyId = party?.partyId ?? null;
+  const pipelineCards = usePipelineCardsForParty(party);
 
   const bookingsQuery = useQuery({
     queryKey: ['party-bookings', partyId],
