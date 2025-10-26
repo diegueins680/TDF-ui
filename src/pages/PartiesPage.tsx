@@ -20,6 +20,7 @@ import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRen
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
 import { listByParty as listPipelinesByParty } from '../api/pipelines';
+import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
 
