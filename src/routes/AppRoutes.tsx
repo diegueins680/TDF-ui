@@ -139,6 +139,18 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="cotizaciones" replace />} />
         </Route>
 
+        {/* Bar */}
+        <Route
+          path="/bar"
+          element={<RequireRole allowed={['admin','finanzas','booker','productor','promotor']}><Outlet /></RequireRole>}
+        >
+          <Route path="sell" element={<Page title="Bar / Punto de venta" />} />
+          <Route path="register" element={<Page title="Bar / Caja" />} />
+          <Route path="inventory" element={<Page title="Bar / Inventario" />} />
+          <Route path="staff" element={<Page title="Bar / Staff" />} />
+          <Route index element={<Navigate to="sell" replace />} />
+        </Route>
+
         {/* Operación */}
         <Route
           path="/operacion"
