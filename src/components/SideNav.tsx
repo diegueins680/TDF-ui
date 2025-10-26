@@ -17,6 +17,7 @@ const MODULE_TO_PATH: Record<string, string> = {
   'Eventos': '/eventos',
   'Escuela': '/escuela',
   'Finanzas': '/finanzas',
+  'Bar': '/bar',
   'Operación': '/operacion',
   'Configuración': '/configuracion',
   'Insights': '/insights'
@@ -33,6 +34,12 @@ const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
     'Trial Queue': '/escuela/trial-queue'
   },
   'Finanzas': { 'Regalías': '/finanzas/regalias' },
+  'Bar': {
+    'Punto de venta': '/bar/sell',
+    'Caja': '/bar/register',
+    'Inventario': '/bar/inventory',
+    'Staff': '/bar/staff'
+  },
   'Operación': {
     'Reservas de equipo': '/operacion/reservas-equipo',
     'Paquetes': '/operacion/paquetes'
