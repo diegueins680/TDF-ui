@@ -5,7 +5,7 @@ export default function Footer(){
     <footer className="site-footer">
       <div className="container cluster" style={{justifyContent:"space-between"}}>
         <div className="cluster">
-          <Logo className="brand-logo" alt="TDF Records" />
+          <Logo className="brand-logo" alt="TDF Records" tone="dark" />
           <span>&copy; {new Date().getFullYear()} TDF Records</span>
         </div>
         <div className="cluster">

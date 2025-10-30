@@ -13,9 +13,16 @@ const FALLBACK_CANDIDATES = [
   '/logo.svg',
 ];
 
-export function Logo({ style, alt, onError, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+type LogoTone = keyof typeof THEMED_SOURCES | 'auto';
+
+type LogoProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+  tone?: LogoTone;
+};
+
+export function Logo({ style, alt, onError, tone = 'auto', ...props }: LogoProps) {
   const { mode } = useColorMode();
-  const themedSource = THEMED_SOURCES[mode] ?? THEMED_SOURCES.light;
+  const desiredTone = tone === 'auto' ? mode : tone;
+  const themedSource = THEMED_SOURCES[desiredTone] ?? THEMED_SOURCES.light;
   const candidates = React.useMemo(() => {
     const seen = new Set<string>();
     return [themedSource, THEMED_SOURCES.dark, THEMED_SOURCES.light, ...FALLBACK_CANDIDATES].filter((candidate) => {
@@ -44,7 +51,7 @@ export function Logo({ style, alt, onError, ...props }: React.ImgHTMLAttributes<
         setIndex((i) => Math.min(i + 1, Math.max(candidates.length - 1, 0)));
         onError?.(event);
       }}
-      style={{ maxHeight: 56, objectFit: 'contain', ...(style || {}) }}
+      style={{ maxHeight: 80, objectFit: 'contain', ...(style || {}) }}
     />
   );
 }
