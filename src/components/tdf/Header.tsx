@@ -30,6 +30,7 @@ export default function Header({ items, username, onLogout, onShowAbout }: Heade
           <Logo
             className="brand-logo"
             alt="TDF Records"
+            tone="dark"
             onLoad={() => setLogoReady(true)}
           />
           <span className="brand-title">TDF Records</span>

@@ -13,6 +13,10 @@
   backdrop-filter:saturate(160%) blur(10px);
 }
 
+.theme-light .site-header{
+  color:#f5f7ff;
+}
+
 /* Header brand: show large transparent logo and visible wordmark */
 .site-header .brand{
   position:relative;
@@ -26,7 +30,7 @@
 .site-header .brand::before{ content:none; }
 .site-header .brand > *{ display:revert !important; }
 .site-header .brand .brand-logo{
-  inline-size:clamp(9rem, 28vw, 18rem);
+  inline-size:clamp(12rem, 32vw, 24rem);
   max-inline-size:100%;
 }
 .site-header .brand .brand-title{
@@ -66,8 +70,16 @@
 .site-footer .brand::before{ content:none; }
 .site-footer .brand > *{ display:revert !important; }
 .site-footer .brand .brand-logo{
-  inline-size:clamp(9rem, 28vw, 18rem);
+  inline-size:clamp(12rem, 32vw, 24rem);
   max-inline-size:100%;
+}
+
+.theme-light .site-header .brand .brand-title{
+  color:#f5f7ff !important;
+}
+
+.theme-light .site-header .user-id{
+  color:rgba(255,255,255,0.75);
 }
 
 @media (max-width: 900px){
