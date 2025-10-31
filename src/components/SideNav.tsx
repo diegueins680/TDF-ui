@@ -142,14 +142,6 @@ export default function SideNav({ collapsed, onToggle, id }: SideNavProps) {
       aria-label="Áreas principales"
       aria-hidden={isCollapsed}
     >
-      {!isCollapsed && onToggle && (
-        <div className="side-nav__header">
-          <button type="button" className="side-nav__dismiss" onClick={onToggle}>
-            <span aria-hidden="true">✕</span>
-            <span className="side-nav__dismiss-label">Cerrar</span>
-          </button>
-        </div>
-      )}
       {topLevel.map((moduleName) => {
         const basePath = MODULE_TO_PATH[moduleName];
         if (!basePath) return null;
