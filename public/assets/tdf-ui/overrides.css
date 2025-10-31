@@ -30,7 +30,7 @@
 .site-header .brand::before{ content:none; }
 .site-header .brand > *{ display:revert !important; }
 .site-header .brand .brand-logo{
-  inline-size:clamp(12rem, 32vw, 24rem);
+  inline-size:clamp(15rem, 36vw, 28rem);
   max-inline-size:100%;
 }
 .site-header .brand .brand-title{
@@ -70,7 +70,7 @@
 .site-footer .brand::before{ content:none; }
 .site-footer .brand > *{ display:revert !important; }
 .site-footer .brand .brand-logo{
-  inline-size:clamp(12rem, 32vw, 24rem);
+  inline-size:clamp(15rem, 36vw, 28rem);
   max-inline-size:100%;
 }
 
@@ -111,39 +111,6 @@
 
 .side-nav{
   transition:transform .25s ease, opacity .25s ease, padding .3s ease, border-color .3s ease, background .3s ease;
-}
-
-.side-nav__header{
-  display:flex;
-  justify-content:flex-end;
-}
-
-.side-nav__dismiss{
-  display:inline-flex;
-  align-items:center;
-  gap:0.4rem;
-  padding:0.35rem 0.75rem;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,0.18);
-  background:rgba(255,255,255,0.08);
-  color:#ffffff;
-  font:inherit;
-  font-weight:600;
-  cursor:pointer;
-  transition:background .2s ease, border-color .2s ease;
-}
-
-.side-nav__dismiss:hover,
-.side-nav__dismiss:focus-visible{
-  background:rgba(255,255,255,0.16);
-  border-color:rgba(255,255,255,0.28);
-  outline:none;
-}
-
-.side-nav__dismiss-label{
-  font-size:0.75rem;
-  letter-spacing:0.08em;
-  text-transform:uppercase;
 }
 
 .side-nav__modules{
