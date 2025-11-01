@@ -521,10 +521,18 @@ function PartyDetailDialog({
 
   const visiblePipelineCards = useMemo(() => {
     const fromApi = (pipelinesQuery.data ?? []).filter(card => isPipelineCardRelated(card, pipelineFilterContext));
-    if (fromApi.length > 0) {
-      return fromApi;
-    }
-    return pipelineCards;
+    const seen = new Set(fromApi.map(card => card.id));
+
+    return [
+      ...fromApi,
+      ...pipelineCards.filter(card => {
+        if (seen.has(card.id)) {
+          return false;
+        }
+        seen.add(card.id);
+        return true;
+      }),
+    ];
   }, [pipelinesQuery.data, pipelineCards, pipelineFilterContext]);
 
   const formatDate = (value: string) => new Date(value).toLocaleString();
