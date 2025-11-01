@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import { Bands } from '../api/bands';
-import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput } from '../api/types';
+import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput, BandDTO } from '../api/types';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,7 @@ import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRen
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
 import { listByParty as listPipelinesByParty } from '../api/pipelines';
+import { buildNormalizedNames, isPipelineCardRelated } from '../features/pipelines/pipelineFilters';
 import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 
 console.log('PartiesPage — with multi-field edit dialog — loaded');
@@ -430,7 +431,24 @@ function PartyDetailDialog({
   }, [open, party?.partyId]);
 
   const partyId = party?.partyId ?? null;
-  const pipelineCards = usePipelineCardsForParty(party);
+
+  const bandsQuery = useQuery({
+    queryKey: ['party-related-bands', partyId],
+    enabled: open && tab === 'overview' && !!partyId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      if (!partyId) {
+        return [] as BandDTO[];
+      }
+      try {
+        const page = await Bands.list({ pageSize: 200 });
+        return page.items ?? [];
+      } catch (error) {
+        console.warn('No se pudieron cargar las bandas relacionadas para el pipeline', error);
+        return [] as BandDTO[];
+      }
+    },
+  });
 
   const bookingsQuery = useQuery({
     queryKey: ['party-bookings', partyId],
@@ -449,6 +467,67 @@ function PartyDetailDialog({
     queryFn: () => (partyId ? listPipelinesByParty(partyId) : Promise.resolve([])),
     enabled: open && tab === 'overview' && !!partyId,
   });
+
+  const relatedBands = useMemo(() => {
+    if (!partyId || !bandsQuery.data) {
+      return [] as BandDTO[];
+    }
+    return bandsQuery.data.filter(
+      band => band.partyId === partyId || band.bMembers.some(member => member.bmPartyId === partyId),
+    );
+  }, [bandsQuery.data, partyId]);
+
+  const relatedNames = useMemo(() => {
+    const names = new Set<string>();
+    if (party?.displayName) {
+      names.add(party.displayName);
+    }
+    if (party?.legalName) {
+      names.add(party.legalName);
+    }
+    relatedBands.forEach(band => {
+      if (band.bName) {
+        names.add(band.bName);
+      }
+    });
+    return Array.from(names);
+  }, [party?.displayName, party?.legalName, relatedBands]);
+
+  const relatedPartyIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (party?.partyId) {
+      ids.add(party.partyId);
+    }
+    relatedBands.forEach(band => {
+      if (band.partyId) {
+        ids.add(band.partyId);
+      }
+    });
+    return Array.from(ids);
+  }, [party?.partyId, relatedBands]);
+
+  const normalizedRelationNames = useMemo(
+    () => buildNormalizedNames(relatedNames),
+    [relatedNames],
+  );
+
+  const pipelineFilterContext = useMemo(
+    () => ({ partyIds: relatedPartyIds, normalizedNames: normalizedRelationNames }),
+    [relatedPartyIds, normalizedRelationNames],
+  );
+
+  const pipelineCards = usePipelineCardsForParty(party, {
+    extraNames: relatedNames,
+    relatedPartyIds,
+  });
+
+  const visiblePipelineCards = useMemo(() => {
+    const fromApi = (pipelinesQuery.data ?? []).filter(card => isPipelineCardRelated(card, pipelineFilterContext));
+    if (fromApi.length > 0) {
+      return fromApi;
+    }
+    return pipelineCards;
+  }, [pipelinesQuery.data, pipelineCards, pipelineFilterContext]);
 
   const formatDate = (value: string) => new Date(value).toLocaleString();
   const formatCurrency = (cents: number) => (cents / 100).toLocaleString('es-EC', { style: 'currency', currency: 'USD' });
@@ -494,9 +573,9 @@ function PartyDetailDialog({
                 <Alert severity="error">{(pipelinesQuery.error as Error).message}</Alert>
               )}
               {!pipelinesQuery.isPending && !pipelinesQuery.isError && (
-                pipelinesQuery.data && pipelinesQuery.data.length > 0 ? (
+                visiblePipelineCards.length > 0 ? (
                   <Stack spacing={1}>
-                    {pipelinesQuery.data.map((card) => (
+                    {visiblePipelineCards.map((card) => (
                       <Paper key={card.id} variant="outlined" sx={{ p: 1.25 }}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                           <Typography variant="body2" fontWeight={600}>{card.title}</Typography>

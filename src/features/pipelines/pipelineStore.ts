@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import type { PipelineCard } from '../../api/types';
+import { buildNormalizedNames, isPipelineCardRelated } from './pipelineFilters';
 
 export type PipelineBoardCard = PipelineCard & {
   partyId?: number;
@@ -57,43 +58,44 @@ export function updatePipelineCardStage(cardId: string, newStage: string) {
   return updated;
 }
 
-function normalize(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
-
 export function usePipelineCardsForParty(
   party: { partyId?: number | null; displayName?: string | null } | null,
+  options?: {
+    extraNames?: Array<string | null | undefined>;
+    relatedPartyIds?: Array<number | null | undefined>;
+  },
 ) {
   const allCards = usePipelineCards();
   return useMemo(() => {
     if (!party) {
       return [] as PipelineBoardCard[];
     }
-    const id = party.partyId ?? null;
-    const displayName = (party.displayName ?? '').trim();
-    const normalizedName = displayName ? normalize(displayName) : '';
-
-    return allCards.filter(card => {
-      if (id && card.partyId && card.partyId === id) {
-        return true;
+    const partyIds = new Set<number>();
+    if (party.partyId) {
+      partyIds.add(party.partyId);
+    }
+    (options?.relatedPartyIds ?? []).forEach(id => {
+      if (id) {
+        partyIds.add(id);
       }
-      if (!normalizedName) {
-        return false;
-      }
-      const candidates = [card.clientName, card.artist, card.title];
-      return candidates.some(candidate => {
-        if (!candidate) return false;
-        const normalizedCandidate = normalize(candidate);
-        return (
-          normalizedCandidate.includes(normalizedName) ||
-          normalizedName.includes(normalizedCandidate)
-        );
-      });
     });
-  }, [allCards, party?.partyId, party?.displayName]);
+
+    const nameCandidates: Array<string | null | undefined> = [party.displayName];
+    if (options?.extraNames) {
+      nameCandidates.push(...options.extraNames);
+    }
+
+    const context = {
+      partyIds: Array.from(partyIds),
+      normalizedNames: buildNormalizedNames(nameCandidates),
+    };
+
+    if (context.partyIds.length === 0 && context.normalizedNames.length === 0) {
+      return [] as PipelineBoardCard[];
+    }
+
+    return allCards.filter(card => isPipelineCardRelated(card, context));
+  }, [allCards, party?.partyId, party?.displayName, options?.extraNames, options?.relatedPartyIds]);
 }
 
 export function resetPipelineCards(next?: PipelineBoardCard[]) {

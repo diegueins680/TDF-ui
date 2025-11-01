@@ -9,10 +9,10 @@ let warnedDisabled = false;
 let warnedUnavailable = false;
 
 const DEMO_PIPELINE_CARDS: PipelineCard[] = [
-  { id: 'mx-1', title: 'Arkabuz - Single A', artist: 'Arkabuz', type: 'Mixing', stage: 'Brief' },
-  { id: 'mx-2', title: 'Quimika - EP', artist: 'Quimika Soul', type: 'Mixing', stage: 'Prep' },
-  { id: 'ma-1', title: 'Skanka Fe - LP', artist: 'Skanka Fe', type: 'Mastering', stage: 'v1' },
-  { id: 'ma-2', title: 'El Bloque - Single', artist: 'El Bloque', type: 'Mastering', stage: 'Approved' },
+  { id: 'mx-1', title: 'Arkabuz - Single A', artist: 'Arkabuz', clientName: 'Arkabuz', type: 'Mixing', stage: 'Brief' },
+  { id: 'mx-2', title: 'Quimika - EP', artist: 'Quimika Soul', clientName: 'Quimika Soul', type: 'Mixing', stage: 'Prep' },
+  { id: 'ma-1', title: 'Skanka Fe - LP', artist: 'Skanka Fe', clientName: 'Skanka Fe', type: 'Mastering', stage: 'v1' },
+  { id: 'ma-2', title: 'El Bloque - Single', artist: 'El Bloque', clientName: 'El Bloque', type: 'Mastering', stage: 'Approved' },
 ];
 
 function warnDisabledOnce() {
