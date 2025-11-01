@@ -23,8 +23,6 @@ import { listByParty as listPipelinesByParty } from '../api/pipelines';
 import { buildNormalizedNames, isPipelineCardRelated } from '../features/pipelines/pipelineFilters';
 import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 
-console.log('PartiesPage — with multi-field edit dialog — loaded');
-
 const roleValues = ['Admin','Manager','Engineer','Teacher','Reception','Accounting','Artist','Student','Vendor','ReadOnly','Customer'] as const;
 const ROLE_OPTIONS: { value: RoleKey; label: string }[] = roleValues.map(value => ({ value, label: value }));
 

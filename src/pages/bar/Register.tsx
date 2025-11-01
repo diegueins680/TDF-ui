@@ -216,13 +216,24 @@ export default function RegisterPage() {
                     type="number"
                     size="small"
                     inputProps={{ min: 0, step: 1 }}
-                    value={counts[den] ?? ""}
-                    onChange={(event) =>
-                      setCounts((prev) => ({
-                        ...prev,
-                        [den]: Math.max(0, Number(event.target.value || 0)),
-                      }))
-                    }
+                    value={counts[den] ?? ''}
+                    onChange={(event) => {
+                      const raw = event.target.value;
+                      setCounts((prev) => {
+                        const next = { ...prev };
+                        if (!raw.trim()) {
+                          delete next[den];
+                          return next;
+                        }
+                        const parsed = Number(raw);
+                        if (Number.isNaN(parsed)) {
+                          delete next[den];
+                          return next;
+                        }
+                        next[den] = Math.max(0, Math.round(parsed));
+                        return next;
+                      });
+                    }}
                   />
                 </Stack>
               </Grid>
