@@ -49,6 +49,14 @@ export default function Header({ items, username, onLogout, onShowAbout }: Heade
           ))}
         </nav>
         <div className="nav-actions">
+          <a
+            className="nav-link nav-link--docs"
+            href="/docs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Docs
+          </a>
           {onShowAbout && (
             <button className="btn btn-outline" onClick={onShowAbout} type="button">
               Acerca de

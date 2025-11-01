@@ -88,6 +88,16 @@ body {
   gap: 0.75rem;
 }
 
+.nav-link--docs {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  opacity: 0.85;
+}
+
+.nav-link--docs:hover {
+  opacity: 1;
+}
+
 .user-id {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
