@@ -10,44 +10,30 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
+import { fetchVersion, VersionInfo } from '../api/meta'
 
 type Props = {
   open: boolean
   onClose: () => void
 }
 
-type VersionInfo = {
-  version: string
-  git?: string
-}
-
 export default function AboutDialog({ open, onClose }: Props) {
-  const [apiVersion, setApiVersion] = useState<VersionInfo | null>(null)
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
   const apiBase = useMemo(() => import.meta.env.VITE_API_BASE ?? 'http://localhost:8080', [])
   const timezone = useMemo(() => import.meta.env.VITE_TZ ?? 'UTC', [])
 
   useEffect(() => {
     if (!open) return
-    const controller = new AbortController()
     let cancelled = false
-
-    fetch(`${apiBase}/version`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) return
-        try {
-          const data = await response.json()
-          if (!cancelled) setApiVersion(data)
-        } catch {
-          if (!cancelled) setApiVersion(null)
-        }
+    fetchVersion(apiBase)
+      .then((data) => {
+        if (!cancelled) setVersionInfo(data)
       })
       .catch(() => {
-        if (!cancelled) setApiVersion(null)
+        if (!cancelled) setVersionInfo(null)
       })
-
     return () => {
       cancelled = true
-      controller.abort()
     }
   }, [open, apiBase])
 
@@ -67,16 +53,30 @@ export default function AboutDialog({ open, onClose }: Props) {
           </Typography>
           <Typography variant="body2">
             Versión del API:{' '}
-            {apiVersion ? (
-              <>
-                <Chip label={apiVersion.version} size="small" />
-                {apiVersion.git && (
-                  <>
-                    {' '}
-                    <Chip label={apiVersion.git} size="small" variant="outlined" />
-                  </>
-                )}
-              </>
+            {versionInfo ? (
+              <Stack spacing={0.5}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip label={versionInfo.version} size="small" />
+                  {versionInfo.name ? (
+                    <Chip label={versionInfo.name} size="small" variant="outlined" />
+                  ) : null}
+                  {versionInfo.commit ? (
+                    <Link
+                      href={`https://github.com/diegueins680/TDF/commit/${versionInfo.commit}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      sx={{ fontSize: 12 }}
+                    >
+                      {versionInfo.commit.slice(0, 7)}
+                    </Link>
+                  ) : null}
+                </Stack>
+                {versionInfo.buildTime ? (
+                  <Typography variant="caption" color="text.secondary">
+                    Built: {new Date(versionInfo.buildTime).toUTCString()}
+                  </Typography>
+                ) : null}
+              </Stack>
             ) : (
               'n/d'
             )}
