@@ -1,6 +1,7 @@
 import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import SideNav from '../components/SideNav';
+import SessionInputList from '../pages/SessionInputList';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
@@ -45,6 +46,13 @@ function Layout() {
       </div>
     </div>
   );
+}
+
+function SessionInputListRoute() {
+  const { id } = useParams();
+  const parsed = Number(id);
+  const sessionId = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return <SessionInputList sessionId={sessionId} />;
 }
 
 export default function AppRoutes() {
@@ -183,6 +191,7 @@ export default function AppRoutes() {
           path="/insights"
           element={<RequireRole allowed={['admin','finanzas','booker','ingeniero','productor','profesor','promotor']}><Page title="Insights" /></RequireRole>}
         />
+        <Route path="/sessions/:id/input-list" element={<SessionInputListRoute />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/inicio" replace />} />
