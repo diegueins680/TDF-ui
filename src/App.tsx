@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Placeholder from './components/Placeholder';
 import PartiesPage from './pages/PartiesPage';
 import BookingsPage from './pages/BookingsPage';
+import CalendarPage from './pages/CalendarPage';
 import PipelinesPage from './pages/PipelinesPage';
 import SessionsPage from './pages/SessionsPage';
 import TeachersPage from './pages/TeachersPage';
@@ -46,6 +47,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/trial" element={<TrialRequestPage />} />
