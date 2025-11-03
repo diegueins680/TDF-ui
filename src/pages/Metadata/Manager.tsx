@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { useEffect, useState } from 'react';
+import {
+  Button,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Paper,
+} from '@mui/material';
 
 interface MetadataRow {
   catalog_id: string;
@@ -14,21 +24,23 @@ interface MetadataRow {
 
 const EMPTY_ROWS: MetadataRow[] = [];
 
+type ColumnDefinition = {
+  field: keyof MetadataRow;
+  header: string;
+};
+
+const COLUMN_DEFINITIONS: readonly ColumnDefinition[] = [
+  { field: 'catalog_id', header: 'Catalog ID' },
+  { field: 'artist_name', header: 'Artist' },
+  { field: 'project_title', header: 'Project' },
+  { field: 'session_type', header: 'Type' },
+  { field: 'bpm', header: 'BPM' },
+  { field: 'key', header: 'Key' },
+  { field: 'genre', header: 'Genre' },
+];
+
 export default function MetadataManager() {
   const [rows, setRows] = useState<MetadataRow[]>(EMPTY_ROWS);
-
-  const columns: GridColDef<MetadataRow>[] = useMemo(
-    () => [
-      { field: 'catalog_id', headerName: 'Catalog ID', flex: 1, minWidth: 140 },
-      { field: 'artist_name', headerName: 'Artist', flex: 1, minWidth: 160 },
-      { field: 'project_title', headerName: 'Project', flex: 1, minWidth: 180 },
-      { field: 'session_type', headerName: 'Type', width: 140 },
-      { field: 'bpm', headerName: 'BPM', width: 110 },
-      { field: 'key', headerName: 'Key', width: 110 },
-      { field: 'genre', headerName: 'Genre', width: 160 },
-    ],
-    []
-  );
 
   useEffect(() => {
     let isMounted = true;
@@ -57,14 +69,35 @@ export default function MetadataManager() {
         Metadata Manager
       </Typography>
 
-      <div style={{ height: 560, width: '100%', backgroundColor: '#fff' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          getRowId={(row) => row.catalog_id}
-          disableRowSelectionOnClick
-        />
-      </div>
+      <TableContainer component={Paper} elevation={0} sx={{ maxHeight: 560 }}>
+        <Table stickyHeader aria-label="metadata table">
+          <TableHead>
+            <TableRow>
+              {COLUMN_DEFINITIONS.map((column) => (
+                <TableCell key={column.field}>{column.header}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={COLUMN_DEFINITIONS.length} align="center">
+                  No metadata available
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((row) => (
+                <TableRow key={row.catalog_id} hover>
+                  {COLUMN_DEFINITIONS.map((column) => (
+                    <TableCell key={column.field}>{row[column.field]}</TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Stack direction="row" spacing={1.5}>
         <Button variant="contained">Import CSV/JSON</Button>
