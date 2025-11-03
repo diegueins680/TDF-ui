@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import SideNav from '../components/SideNav';
+import MetadataPage from '../pages/Metadata';
+import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
 
 export type Role =
@@ -190,6 +192,10 @@ export default function AppRoutes() {
         <Route
           path="/insights"
           element={<RequireRole allowed={['admin','finanzas','booker','ingeniero','productor','profesor','promotor']}><Page title="Insights" /></RequireRole>}
+        />
+        <Route
+          path={METADATA_ROUTES.list}
+          element={<RequireRole allowed={['admin']}><MetadataPage /></RequireRole>}
         />
         <Route path="/sessions/:id/input-list" element={<SessionInputListRoute />} />
       </Route>
