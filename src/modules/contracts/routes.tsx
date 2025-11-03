@@ -1,0 +1,1 @@
+export const contractsRoutes = [{ path: '/contracts/new', lazy: () => import('./screens/NewContract') }, { path: '/contracts/:id', lazy: () => import('./screens/ContractView') }];
