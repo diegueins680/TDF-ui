@@ -27,16 +27,19 @@ const EMPTY_ROWS: MetadataRow[] = [];
 type ColumnDefinition = {
   field: keyof MetadataRow;
   header: string;
+  minWidth?: number;
+  width?: number;
+  isNumeric?: boolean;
 };
 
 const COLUMN_DEFINITIONS: readonly ColumnDefinition[] = [
-  { field: 'catalog_id', header: 'Catalog ID' },
-  { field: 'artist_name', header: 'Artist' },
-  { field: 'project_title', header: 'Project' },
-  { field: 'session_type', header: 'Type' },
-  { field: 'bpm', header: 'BPM' },
-  { field: 'key', header: 'Key' },
-  { field: 'genre', header: 'Genre' },
+  { field: 'catalog_id', header: 'Catalog ID', minWidth: 140 },
+  { field: 'artist_name', header: 'Artist', minWidth: 160 },
+  { field: 'project_title', header: 'Project', minWidth: 180 },
+  { field: 'session_type', header: 'Type', width: 140 },
+  { field: 'bpm', header: 'BPM', width: 110, isNumeric: true },
+  { field: 'key', header: 'Key', width: 110 },
+  { field: 'genre', header: 'Genre', width: 160 },
 ];
 
 export default function MetadataManager() {
@@ -74,7 +77,13 @@ export default function MetadataManager() {
           <TableHead>
             <TableRow>
               {COLUMN_DEFINITIONS.map((column) => (
-                <TableCell key={column.field}>{column.header}</TableCell>
+                <TableCell
+                  key={column.field}
+                  sx={{ minWidth: column.minWidth, width: column.width, fontWeight: 600 }}
+                  align={column.isNumeric ? 'right' : 'left'}
+                >
+                  {column.header}
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -90,7 +99,13 @@ export default function MetadataManager() {
               rows.map((row) => (
                 <TableRow key={row.catalog_id} hover>
                   {COLUMN_DEFINITIONS.map((column) => (
-                    <TableCell key={column.field}>{row[column.field]}</TableCell>
+                    <TableCell
+                      key={column.field}
+                      sx={{ minWidth: column.minWidth, width: column.width }}
+                      align={column.isNumeric ? 'right' : 'left'}
+                    >
+                      {row[column.field]}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
