@@ -341,14 +341,6 @@ export type TrialSlotDTO = {
   slots: PreferredSlotDTO[];
 };
 
-export type TrialAvailabilityDTO = {
-  teacherId: number;
-  teacherName: string;
-  subjectId: number;
-  subjectName?: string;
-  slots: PreferredSlotDTO[];
-};
-
 export type TrialRequestCreate = {
   partyId?: number;
   subjectId: number;
