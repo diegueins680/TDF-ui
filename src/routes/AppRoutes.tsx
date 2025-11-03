@@ -4,6 +4,7 @@ import SideNav from '../components/SideNav';
 import MetadataPage from '../pages/Metadata';
 import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
+import MetadataPage from '../pages/Metadata';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
@@ -188,6 +189,16 @@ export default function AppRoutes() {
           <Route path="preferencias" element={<Page title="Configuración / Preferencias" />} />
           <Route index element={<Navigate to="roles-permisos" replace />} />
         </Route>
+
+        {/* Metadata */}
+        <Route
+          path="/metadata"
+          element={
+            <RequireRole allowed={['admin','ingeniero','productor']}>
+              <MetadataPage />
+            </RequireRole>
+          }
+        />
 
         {/* Insights */}
         <Route
