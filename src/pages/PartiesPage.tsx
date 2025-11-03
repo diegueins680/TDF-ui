@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import { Bands } from '../api/bands';
-import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput } from '../api/types';
+import type { PartyDTO, PartyCreate, PartyUpdate, RoleKey, BandCreate, BandMemberInput, BandDTO } from '../api/types';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,8 +19,9 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
-
-console.log('PartiesPage — with multi-field edit dialog — loaded');
+import { listByParty as listPipelinesByParty } from '../api/pipelines';
+import { buildNormalizedNames, isPipelineCardRelated } from '../features/pipelines/pipelineFilters';
+import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 
 const roleValues = ['Admin','Manager','Engineer','Teacher','Reception','Accounting','Artist','Student','Vendor','ReadOnly','Customer'] as const;
 const ROLE_OPTIONS: { value: RoleKey; label: string }[] = roleValues.map(value => ({ value, label: value }));
@@ -429,6 +430,24 @@ function PartyDetailDialog({
 
   const partyId = party?.partyId ?? null;
 
+  const bandsQuery = useQuery({
+    queryKey: ['party-related-bands', partyId],
+    enabled: open && tab === 'overview' && !!partyId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      if (!partyId) {
+        return [] as BandDTO[];
+      }
+      try {
+        const page = await Bands.list({ pageSize: 200 });
+        return page.items ?? [];
+      } catch (error) {
+        console.warn('No se pudieron cargar las bandas relacionadas para el pipeline', error);
+        return [] as BandDTO[];
+      }
+    },
+  });
+
   const bookingsQuery = useQuery({
     queryKey: ['party-bookings', partyId],
     queryFn: () => (partyId ? Bookings.listByParty(partyId) : Promise.resolve([])),
@@ -440,6 +459,81 @@ function PartyDetailDialog({
     queryFn: () => (partyId ? Invoices.listByParty(partyId) : Promise.resolve([])),
     enabled: open && tab === 'invoices' && !!partyId,
   });
+
+  const pipelinesQuery = useQuery({
+    queryKey: ['party-pipelines', partyId],
+    queryFn: () => (partyId ? listPipelinesByParty(partyId) : Promise.resolve([])),
+    enabled: open && tab === 'overview' && !!partyId,
+  });
+
+  const relatedBands = useMemo(() => {
+    if (!partyId || !bandsQuery.data) {
+      return [] as BandDTO[];
+    }
+    return bandsQuery.data.filter(
+      band => band.partyId === partyId || band.bMembers.some(member => member.bmPartyId === partyId),
+    );
+  }, [bandsQuery.data, partyId]);
+
+  const relatedNames = useMemo(() => {
+    const names = new Set<string>();
+    if (party?.displayName) {
+      names.add(party.displayName);
+    }
+    if (party?.legalName) {
+      names.add(party.legalName);
+    }
+    relatedBands.forEach(band => {
+      if (band.bName) {
+        names.add(band.bName);
+      }
+    });
+    return Array.from(names);
+  }, [party?.displayName, party?.legalName, relatedBands]);
+
+  const relatedPartyIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (party?.partyId) {
+      ids.add(party.partyId);
+    }
+    relatedBands.forEach(band => {
+      if (band.partyId) {
+        ids.add(band.partyId);
+      }
+    });
+    return Array.from(ids);
+  }, [party?.partyId, relatedBands]);
+
+  const normalizedRelationNames = useMemo(
+    () => buildNormalizedNames(relatedNames),
+    [relatedNames],
+  );
+
+  const pipelineFilterContext = useMemo(
+    () => ({ partyIds: relatedPartyIds, normalizedNames: normalizedRelationNames }),
+    [relatedPartyIds, normalizedRelationNames],
+  );
+
+  const pipelineCards = usePipelineCardsForParty(party, {
+    extraNames: relatedNames,
+    relatedPartyIds,
+  });
+
+  const visiblePipelineCards = useMemo(() => {
+    const fromApi = (pipelinesQuery.data ?? []).filter(card => isPipelineCardRelated(card, pipelineFilterContext));
+    const seen = new Set(fromApi.map(card => card.id));
+
+    return [
+      ...fromApi,
+      ...pipelineCards.filter(card => {
+        if (seen.has(card.id)) {
+          return false;
+        }
+        seen.add(card.id);
+        return true;
+      }),
+    ];
+  }, [pipelinesQuery.data, pipelineCards, pipelineFilterContext]);
 
   const formatDate = (value: string) => new Date(value).toLocaleString();
   const formatCurrency = (cents: number) => (cents / 100).toLocaleString('es-EC', { style: 'currency', currency: 'USD' });
@@ -474,6 +568,38 @@ function PartyDetailDialog({
               <Typography variant="body2">RUC / CI: {party?.taxId ?? '—'}</Typography>
               <Typography variant="body2">Contacto de emergencia: {party?.emergencyContact ?? '—'}</Typography>
               <Typography variant="body2">Notas: {party?.notes ?? '—'}</Typography>
+            </Stack>
+            <Divider />
+            <Stack spacing={1}>
+              <Typography variant="subtitle1">Pipeline</Typography>
+              {pipelinesQuery.isPending && (
+                <CircularProgress size={20} sx={{ alignSelf: 'flex-start', mt: 0.5 }} />
+              )}
+              {pipelinesQuery.isError && (
+                <Alert severity="error">{(pipelinesQuery.error as Error).message}</Alert>
+              )}
+              {!pipelinesQuery.isPending && !pipelinesQuery.isError && (
+                visiblePipelineCards.length > 0 ? (
+                  <Stack spacing={1}>
+                    {visiblePipelineCards.map((card) => (
+                      <Paper key={card.id} variant="outlined" sx={{ p: 1.25 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                          <Typography variant="body2" fontWeight={600}>{card.title}</Typography>
+                          <Chip label={card.stage} color="primary" size="small" />
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {card.type}
+                          {card.artist ? ` • ${card.artist}` : ''}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Este contacto no tiene proyectos en pipeline todavía.
+                  </Typography>
+                )
+              )}
             </Stack>
           </Stack>
         )}

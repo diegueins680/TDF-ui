@@ -10,6 +10,7 @@ export const topLevel = [
   "Eventos",
   "Escuela",
   "Finanzas",
+  "Bar",
   "Operación",
   "Configuración",
   "Insights"
@@ -22,6 +23,7 @@ export const submenus: Record<string, string[]> = {
   "Eventos": ["Agenda","Fechas y tours","Venues","Staff","Presupuestos","Post-mortem"],
   "Escuela": ["Profesores","Clases","Trial Lessons","Trial Queue","Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
   "Finanzas": ["Cotizaciones","Facturas","Cobros","Regalías"],
+  "Bar": ["Punto de venta","Caja","Inventario","Staff"],
   "Operación": ["Inventario","Reservas de equipo","Mantenimiento","Paquetes"],
   "Configuración": ["Roles y permisos","Impuestos y series","Unidades de negocio","Sedes","Marcas","Integraciones","Preferencias"],
   "Insights": []
@@ -29,14 +31,14 @@ export const submenus: Record<string, string[]> = {
 
 export const visibilityByRole: Record<Role, (string | "*")[]> = {
   admin: ["*"],
-  finanzas: ["Finanzas","Label.Regalías","Estudio.Órdenes","Estudio.Reportes","Eventos.Presupuestos","CRM","Insights"],
-  booker: ["Estudio","CRM","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones"],
+  finanzas: ["Finanzas","Label.Regalías","Estudio.Órdenes","Estudio.Reportes","Eventos.Presupuestos","CRM","Insights","Bar"],
+  booker: ["Estudio","CRM","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones","Bar"],
   ingeniero: ["Estudio","Operación","CRM","Label"],
-  productor: ["Estudio","Label","Eventos","CRM"],
+  productor: ["Estudio","Label","Eventos","CRM","Bar"],
   artista: ["Label.Contratos","Label.Releases","Label.Tracks y assets","Label.Regalías","Estudio.Calendario","Eventos.Fechas y tours"],
   profesor: ["Escuela","Estudio.Calendario","CRM"],
   estudiante: ["Escuela.Cursos","Escuela.Inscripciones","Escuela.Pagos"],
-  promotor: ["Eventos","CRM","Label.Artistas","Operación.Reservas de equipo"]
+  promotor: ["Eventos","CRM","Label.Artistas","Operación.Reservas de equipo","Bar"]
 };
 
 export const quickCreate: Record<Role, string[]> = {

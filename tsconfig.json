@@ -16,12 +16,20 @@
     "noEmit": true,
     "types": [
       "vite/client",
-      "node"
+      "node",
+      "react"
     ]
   },
   "include": [
     "src",
     "src/vite-env.d.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/__tests__/**"
   ],
   "references": [
     {

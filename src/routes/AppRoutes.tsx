@@ -1,6 +1,7 @@
 import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import SideNav from '../components/SideNav';
+import SessionInputList from '../pages/SessionInputList';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
@@ -45,6 +46,13 @@ function Layout() {
       </div>
     </div>
   );
+}
+
+function SessionInputListRoute() {
+  const { id } = useParams();
+  const parsed = Number(id);
+  const sessionId = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return <SessionInputList sessionId={sessionId} />;
 }
 
 export default function AppRoutes() {
@@ -139,6 +147,18 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="cotizaciones" replace />} />
         </Route>
 
+        {/* Bar */}
+        <Route
+          path="/bar"
+          element={<RequireRole allowed={['admin','finanzas','booker','productor','promotor']}><Outlet /></RequireRole>}
+        >
+          <Route path="sell" element={<Page title="Bar / Punto de venta" />} />
+          <Route path="register" element={<Page title="Bar / Caja" />} />
+          <Route path="inventory" element={<Page title="Bar / Inventario" />} />
+          <Route path="staff" element={<Page title="Bar / Staff" />} />
+          <Route index element={<Navigate to="sell" replace />} />
+        </Route>
+
         {/* Operación */}
         <Route
           path="/operacion"
@@ -171,6 +191,7 @@ export default function AppRoutes() {
           path="/insights"
           element={<RequireRole allowed={['admin','finanzas','booker','ingeniero','productor','profesor','promotor']}><Page title="Insights" /></RequireRole>}
         />
+        <Route path="/sessions/:id/input-list" element={<SessionInputListRoute />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/inicio" replace />} />

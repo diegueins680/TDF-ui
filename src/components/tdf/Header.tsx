@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Logo } from '../Logo'
 
@@ -13,30 +13,11 @@ type HeaderProps = {
   items: HeaderNavItem[]
   username?: string
   onLogout?: () => void
+  onShowAbout?: () => void
 }
 
-export default function Header({ items, username, onLogout }: HeaderProps) {
+export default function Header({ items, username, onLogout, onShowAbout }: HeaderProps) {
   const [logoReady, setLogoReady] = useState(false)
-  useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('tdf-theme') : null
-    const root = document.documentElement
-    if (stored === 'dark') {
-      root.classList.add('theme-dark')
-      root.classList.remove('theme-light')
-    } else if (stored === 'light') {
-      root.classList.add('theme-light')
-      root.classList.remove('theme-dark')
-    }
-  }, [])
-
-  const onToggle = () => {
-    const root = document.documentElement
-    const isDark = root.classList.toggle('theme-dark')
-    root.classList.toggle('theme-light', !isDark)
-    try {
-      localStorage.setItem('tdf-theme', isDark ? 'dark' : 'light')
-    } catch {}
-  }
 
   const navClass = ({ isActive }: { isActive: boolean }) => `nav-link${isActive ? ' is-active' : ''}`
 
@@ -49,6 +30,7 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
           <Logo
             className="brand-logo"
             alt="TDF Records"
+            tone="dark"
             onLoad={() => setLogoReady(true)}
           />
           <span className="brand-title">TDF Records</span>
@@ -67,9 +49,19 @@ export default function Header({ items, username, onLogout }: HeaderProps) {
           ))}
         </nav>
         <div className="nav-actions">
-          <button className="btn btn-outline" onClick={onToggle} aria-label="Toggle theme">
-            Theme
-          </button>
+          <a
+            className="nav-link nav-link--docs"
+            href="/docs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Docs
+          </a>
+          {onShowAbout && (
+            <button className="btn btn-outline" onClick={onShowAbout} type="button">
+              Acerca de
+            </button>
+          )}
           {username && <span className="user-id" aria-label="Signed in user">{username}</span>}
           {onLogout && (
             <button className="btn" onClick={onLogout} type="button">

@@ -12,6 +12,10 @@ import RoomsPage from './pages/RoomsPage';
 import PackagesPage from './pages/PackagesPage';
 import InvoicesPage from './pages/InvoicesPage';
 import InventoryPage from './pages/InventoryPage';
+import BarSellPage from './pages/bar/Sell';
+import BarRegisterPage from './pages/bar/Register';
+import BarInventoryPage from './pages/bar/Inventory';
+import BarStaffPage from './pages/bar/Staff';
 import AdminConsolePage from './pages/AdminConsolePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/public/SignupPage';
@@ -109,6 +113,14 @@ export default function App() {
               <Route path="cobros" element={<Payments />} />
               <Route path="recibos/:receiptId" element={<ReceiptView />} />
               <Route path="regalias" element={<Placeholder title="Finanzas · Regalías" />} />
+            </Route>
+
+            <Route path="/bar" element={<Outlet />}>
+              <Route index element={<Navigate to="sell" replace />} />
+              <Route path="sell" element={<BarSellPage />} />
+              <Route path="register" element={<BarRegisterPage />} />
+              <Route path="inventory" element={<BarInventoryPage />} />
+              <Route path="staff" element={<BarStaffPage />} />
             </Route>
 
             <Route path="/operacion" element={<Outlet />}>

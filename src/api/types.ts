@@ -63,7 +63,17 @@ export type PipelineType = 'Mixing' | 'Mastering';
 export type PipelineStage =
   | 'Brief' | 'Prep' | 'v1 Sent' | 'Revisions' | 'Approved' | 'Delivered' // Mixing
   | 'v1' | 'DDP Delivered'; // Mastering extras
-export type PipelineCard = { id: string; title: string; artist?: string; type: PipelineType; stage: string };
+export type PipelineCard = {
+  id: string;
+  title: string;
+  artist?: string | null;
+  type: PipelineType;
+  stage: string;
+  partyId?: number | null;
+  clientName?: string | null;
+  relatedPartyIds?: number[] | null;
+  relatedPartyNames?: string[] | null;
+};
 
 export type RoleKey =
   | 'Admin'
@@ -262,6 +272,17 @@ export type AssetUpdate = Partial<{
   uNotes: string | null;
 }>;
 
+export type InvoiceLineDTO = {
+  lineId: number;
+  description: string;
+  quantity: number;
+  unitCents: number;
+  taxBps: number;
+  totalCents: number;
+  serviceOrderId?: number | null;
+  packagePurchaseId?: number | null;
+};
+
 export type InvoiceDTO = {
   invId: number;
   number?: string | null;
@@ -269,15 +290,62 @@ export type InvoiceDTO = {
   subtotalC: number;
   taxC: number;
   totalC: number;
-  customerId?: number;
+  currency: string;
+  customerId?: number | null;
+  notes?: string | null;
+  receiptId?: number | null;
+  lineItems: InvoiceLineDTO[];
+};
+
+export type CreateInvoiceLineReq = {
+  cilDescription: string;
+  cilQuantity: number;
+  cilUnitCents: number;
+  cilTaxBps?: number | null;
+  cilServiceOrderId?: number | null;
+  cilPackagePurchaseId?: number | null;
 };
 
 export type CreateInvoiceReq = {
   ciCustomerId: number;
-  ciSubtotalCents: number;
-  ciTaxCents: number;
-  ciTotalCents: number;
+  ciCurrency?: string | null;
   ciNumber?: string | null;
+  ciNotes?: string | null;
+  ciLineItems: CreateInvoiceLineReq[];
+  ciGenerateReceipt?: boolean | null;
+};
+
+export type ReceiptLineDTO = {
+  receiptLineId: number;
+  rlDescription: string;
+  rlQuantity: number;
+  rlUnitCents: number;
+  rlTaxBps?: number | null;
+  rlTotalCents: number;
+};
+
+export type ReceiptDTO = {
+  receiptId: number;
+  receiptNumber: string;
+  issuedAt: string;
+  issueDate: string;
+  buyerName: string;
+  buyerEmail?: string | null;
+  currency: string;
+  subtotalCents: number;
+  taxCents: number;
+  totalCents: number;
+  notes?: string | null;
+  invoiceId: number;
+  lineItems: ReceiptLineDTO[];
+};
+
+export type CreateReceiptReq = {
+  crInvoiceId: number;
+  crBuyerName?: string | null;
+  crBuyerEmail?: string | null;
+  crNotes?: string | null;
+  crCurrency?: string | null;
 };
 
 export type PackageProductDTO = {

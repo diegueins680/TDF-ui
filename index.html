@@ -20,6 +20,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- API status chip mount (self-contained Vite entry) -->
+    <div id="api-status-root"></div>
+    <!-- Vite will bundle this separate entry -->
+    <script type="module" src="/src/status.tsx"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

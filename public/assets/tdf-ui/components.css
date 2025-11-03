@@ -36,7 +36,7 @@ body {
 
 .brand-logo {
   display: block;
-  inline-size: clamp(9rem, 28vw, 18rem);
+  inline-size: clamp(12rem, 32vw, 22rem);
   max-inline-size: 100%;
   block-size: auto;
   background: none !important;
@@ -86,6 +86,16 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.nav-link--docs {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  opacity: 0.85;
+}
+
+.nav-link--docs:hover {
+  opacity: 1;
 }
 
 .user-id {
@@ -187,6 +197,10 @@ body {
   list-style: none;
   display: grid;
   gap: 0.35rem;
+}
+
+.side-nav__submenu[hidden] {
+  display: none !important;
 }
 
 .side-nav__sublink {

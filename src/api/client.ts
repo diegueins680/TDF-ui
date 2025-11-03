@@ -12,6 +12,16 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 let authToken: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
 
+function resolveUrl(url?: string | null) {
+  if (!url) {
+    return url ?? undefined;
+  }
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+  return url.replace(/^\/+/u, '');
+}
+
 client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (authToken) {
     if (!config.headers.has('Authorization')) {
@@ -89,8 +99,12 @@ function normalizeHeaders(headers?: HeadersInit): Record<string, string> | undef
 }
 
 async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  const resolvedConfig: AxiosRequestConfig = {
+    ...config,
+    url: resolveUrl(config.url),
+  };
   try {
-    const response = await client.request<T>(config);
+    const response = await client.request<T>(resolvedConfig);
     if (response.status === 204) {
       return undefined as T;
     }
@@ -114,7 +128,7 @@ export function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const normalizedHeaders = normalizeHeaders(headers);
   const data = normalizeBody(body);
   const config: AxiosRequestConfig = {
-    url: path,
+    url: resolveUrl(path),
     method,
     headers: normalizedHeaders,
     data,
@@ -123,11 +137,11 @@ export function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return request<T>(config);
 }
 
-export const get = <T>(path: string) => request<T>({ url: path, method: 'GET' });
-export const post = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'POST', data: normalizeBody(body) });
-export const put = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'PUT', data: normalizeBody(body) });
-export const patch = <T>(path: string, body?: unknown) => request<T>({ url: path, method: 'PATCH', data: normalizeBody(body) });
-export const del = <T>(path: string) => request<T>({ url: path, method: 'DELETE' });
+export const get = <T>(path: string) => request<T>({ url: resolveUrl(path), method: 'GET' });
+export const post = <T>(path: string, body?: unknown) => request<T>({ url: resolveUrl(path), method: 'POST', data: normalizeBody(body) });
+export const put = <T>(path: string, body?: unknown) => request<T>({ url: resolveUrl(path), method: 'PUT', data: normalizeBody(body) });
+export const patch = <T>(path: string, body?: unknown) => request<T>({ url: resolveUrl(path), method: 'PATCH', data: normalizeBody(body) });
+export const del = <T>(path: string) => request<T>({ url: resolveUrl(path), method: 'DELETE' });
 
 export const apiClient = { get, post, put, patch, delete: del };
 
@@ -165,19 +179,6 @@ export type Payment = {
   method?: string;
 };
 
-export type Receipt = {
-  id: string;
-  number: string;
-  issueDate: string;
-  studentName: string;
-  studentEmail?: string;
-  packageName: string;
-  amountCents: number;
-  currency: string;
-  notes?: string;
-  teacherName?: string;
-  organization?: string;
-};
 
 export function cents(amountCents: number, currency: string) {
   const amount = (amountCents ?? 0) / 100;
@@ -200,5 +201,4 @@ export const tdfApi = {
   studentsByTeacher: (teacherId: string) =>
     get<Array<{ id: string; name: string; email?: string }>>(`/teachers/${teacherId}/students`),
   listPayments: () => get<Payment[]>('/payments'),
-  getReceipt: (receiptId: string) => get<Receipt>(`/receipts/${receiptId}`),
 };
