@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Checkbox, Container, FormControlLabel, Stack, TextField, Typography, Alert } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Trials } from '../../api/trials';
+import { AuthApi } from '../../api/auth';
 
 type SignupDraft = {
   firstName: string;
@@ -35,7 +35,7 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     try {
-      await Trials.createPublicSignup({
+      await AuthApi.signup({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim(),

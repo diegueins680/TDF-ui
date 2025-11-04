@@ -153,6 +153,12 @@ export default function LoginPage() {
             </Button>
             <Stack spacing={1} pt={1}>
               <Typography variant="body2" color="text.secondary" textAlign="center">
+                ¿Olvidaste tu contraseña?{' '}
+                <Box component={Link} to="/forgot-password" sx={{ fontWeight: 600 }} color="primary.main">
+                  Recuperar acceso
+                </Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
                 ¿No tienes cuenta?{' '}
                 <Box component={Link} to="/signup" sx={{ fontWeight: 600 }} color="primary.main">
                   Crear cuenta

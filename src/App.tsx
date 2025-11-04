@@ -21,6 +21,9 @@ import AdminConsolePage from './pages/AdminConsolePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/public/SignupPage';
 import TrialRequestPage from './pages/public/TrialRequestPage';
+import ForgotPasswordPage from './pages/public/ForgotPasswordPage';
+import ResetPasswordPage from './pages/public/ResetPasswordPage';
+import ChangePasswordPage from './pages/account/ChangePasswordPage';
 import TrialQueuePage from './pages/trials/TrialQueuePage';
 import StudentProfilePage from './pages/students/StudentProfilePage';
 import PackageListLite from './features/packages/PackageList';
@@ -51,11 +54,14 @@ export default function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/trial" element={<TrialRequestPage />} />
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/inicio" replace />} />
             <Route path="/inicio" element={<Placeholder title="Inicio" description="Selecciona un módulo para comenzar a trabajar." />} />
+            <Route path="/account/password" element={<ChangePasswordPage />} />
 
             <Route path="/crm" element={<Outlet />}>
               <Route index element={<Navigate to="contactos" replace />} />
