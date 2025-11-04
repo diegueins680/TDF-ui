@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Container, Stack, TextField, Typography } from '@mui/material';
 import { AuthApi } from '../../api/auth';
+import { useAuth } from '../../auth/AuthProvider';
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -9,6 +10,7 @@ export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -20,9 +22,14 @@ export default function ChangePasswordPage() {
       return;
     }
 
+    if (!user?.username) {
+      setError('No pudimos identificar tu usuario. Vuelve a iniciar sesión e inténtalo nuevamente.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await AuthApi.changePassword({ currentPassword, newPassword });
+      await AuthApi.changePassword({ username: user.username, currentPassword, newPassword });
       setSuccess(true);
       setCurrentPassword('');
       setNewPassword('');
