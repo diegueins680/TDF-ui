@@ -118,6 +118,21 @@ export type AdminConsoleView = {
   cards: AdminConsoleCard[];
 };
 
+export type AdminUserStatus = 'ACTIVE' | 'INVITED' | 'DISABLED';
+
+export type AdminUserDTO = {
+  userId: number;
+  username: string;
+  displayName?: string | null;
+  partyId?: number | null;
+  roles: RoleKey[];
+  status?: AdminUserStatus | null;
+  lastLoginAt?: string | null;
+  lastSeenAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
 export type RoomDTO = {
   roomId: string;
   rName: string;

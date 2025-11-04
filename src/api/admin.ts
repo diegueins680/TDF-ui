@@ -1,5 +1,5 @@
-import { get, post } from './client';
-import type { AdminConsoleView, AuditLogEntry } from './types';
+import { get, post, put } from './client';
+import type { AdminConsoleView, AdminUserDTO, AuditLogEntry, RoleKey } from './types';
 
 export const AdminApi = {
   seed: () => post<void>('/admin/seed', {}),
@@ -15,4 +15,7 @@ export const AdminApi = {
     }
   },
   consolePreview: () => get<AdminConsoleView>('/stubs/admin/console'),
+  listUsers: () => get<AdminUserDTO[]>('/admin/users'),
+  updateUserRoles: (userId: number, roles: RoleKey[]) =>
+    put<AdminUserDTO>(`/admin/users/${userId}/roles`, { roles }),
 };
