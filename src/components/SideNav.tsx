@@ -25,7 +25,7 @@ const MODULE_TO_PATH: Record<string, string> = {
 
 const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
   'Estudio': { 'Salas y recursos': '/estudio/salas', 'Órdenes': '/estudio/ordenes' },
-  'Label': { 'Tracks y assets': '/label/tracks' },
+  'Label': { 'Tracks y assets': '/label/tracks', 'Metadata': '/label/metadata' },
   'Eventos': { 'Fechas y tours': '/eventos/fechas-y-tours', 'Post-mortem': '/eventos/post-mortem' },
   'Escuela': {
     'Profesores': '/escuela/profesores',

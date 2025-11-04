@@ -19,7 +19,7 @@ export const topLevel = [
 export const submenus: Record<string, string[]> = {
   "CRM": ["Contactos","Empresas","Leads"],
   "Estudio": ["Calendario","Salas y recursos","Órdenes","Pipelines","Reportes"],
-  "Label": ["Artistas","Proyectos","Releases","Tracks y assets","Contratos","Regalías","Marketing"],
+  "Label": ["Artistas","Proyectos","Releases","Tracks y assets","Metadata","Contratos","Regalías","Marketing"],
   "Eventos": ["Agenda","Fechas y tours","Venues","Staff","Presupuestos","Post-mortem"],
   "Escuela": ["Profesores","Clases","Trial Lessons","Trial Queue","Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
   "Finanzas": ["Cotizaciones","Facturas","Cobros","Regalías"],
