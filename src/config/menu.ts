@@ -24,7 +24,7 @@ export const submenus: Record<string, string[]> = {
   "Escuela": ["Profesores","Clases","Trial Lessons","Trial Queue","Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
   "Finanzas": ["Cotizaciones","Facturas","Cobros","Regalías"],
   "Bar": ["Punto de venta","Caja","Inventario","Staff"],
-  "Operación": ["Inventario","Reservas de equipo","Mantenimiento","Paquetes"],
+  "Operación": ["Calendario DOMO","Inventario","Reservas de equipo","Mantenimiento","Paquetes"],
   "Configuración": ["Roles y permisos","Impuestos y series","Unidades de negocio","Sedes","Marcas","Integraciones","Preferencias"],
   "Insights": []
 };
@@ -32,13 +32,13 @@ export const submenus: Record<string, string[]> = {
 export const visibilityByRole: Record<Role, (string | "*")[]> = {
   admin: ["*"],
   finanzas: ["Finanzas","Label.Regalías","Estudio.Órdenes","Estudio.Reportes","Eventos.Presupuestos","CRM","Insights","Bar"],
-  booker: ["Estudio","CRM","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones","Bar"],
+  booker: ["Estudio","CRM","Operación.Calendario DOMO","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones","Bar"],
   ingeniero: ["Estudio","Operación","CRM","Label"],
   productor: ["Estudio","Label","Eventos","CRM","Bar"],
   artista: ["Label.Contratos","Label.Releases","Label.Tracks","Label.Assets","Label.Regalías","Estudio.Calendario","Eventos.Fechas y tours"],
   profesor: ["Escuela","Estudio.Calendario","CRM"],
   estudiante: ["Escuela.Cursos","Escuela.Inscripciones","Escuela.Pagos"],
-  promotor: ["Eventos","CRM","Label.Artistas","Operación.Reservas de equipo","Bar"]
+  promotor: ["Eventos","CRM","Label.Artistas","Operación.Calendario DOMO","Operación.Reservas de equipo","Bar"]
 };
 
 export const quickCreate: Record<Role, string[]> = {

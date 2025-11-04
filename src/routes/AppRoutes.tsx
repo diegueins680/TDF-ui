@@ -166,6 +166,7 @@ export default function AppRoutes() {
           path="/operacion"
           element={<RequireRole allowed={['admin','booker','ingeniero','productor','promotor']}><Outlet /></RequireRole>}
         >
+          <Route path="calendario-domo" element={<Page title="Operación / Calendario DOMO" />} />
           <Route path="inventario" element={<Page title="Operación / Inventario" />} />
           <Route path="reservas-equipo" element={<Page title="Operación / Reservas de equipo" />} />
           <Route path="mantenimiento" element={<Page title="Operación / Mantenimiento" />} />
