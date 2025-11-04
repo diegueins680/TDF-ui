@@ -1,34 +1,35 @@
 import { Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Placeholder from './components/Placeholder';
+import PartiesPage from './pages/PartiesPage';
+import BookingsPage from './pages/BookingsPage';
+import CalendarPage from './pages/CalendarPage';
+import PipelinesPage from './pages/PipelinesPage';
+import SessionsPage from './pages/SessionsPage';
+import TeachersPage from './pages/TeachersPage';
+import LessonsPage from './pages/LessonsPage';
+import TrialLessonsPage from './pages/TrialLessonsPage';
+import RoomsPage from './pages/RoomsPage';
+import PackagesPage from './pages/PackagesPage';
+import InvoicesPage from './pages/InvoicesPage';
+import InventoryPage from './pages/InventoryPage';
 import BarSellPage from './pages/bar/Sell';
 import BarRegisterPage from './pages/bar/Register';
 import BarInventoryPage from './pages/bar/Inventory';
 import BarStaffPage from './pages/bar/Staff';
 import AdminConsolePage from './pages/AdminConsolePage';
-import BookingsPage from './pages/BookingsPage';
-import InventoryPage from './pages/InventoryPage';
 import LoginPage from './pages/LoginPage';
-import LessonsPage from './pages/LessonsPage';
-import MetadataPage from './pages/Metadata';
 import SignupPage from './pages/public/SignupPage';
-import PackagesPage from './pages/PackagesPage';
-import PartiesPage from './pages/PartiesPage';
-import PipelinesPage from './pages/PipelinesPage';
-import Payments from './features/payments/Payments';
-import RoomsPage from './pages/RoomsPage';
-import SessionsPage from './pages/SessionsPage';
-import StudentProfilePage from './pages/students/StudentProfilePage';
-import TeachersPage from './pages/TeachersPage';
-import TeacherLessons from './features/lessons/TeacherLessons';
-import ReceiptView from './features/receipts/ReceiptView';
-import StudentsByTeacher from './features/students/StudentsByTeacher';
-import StudentLessons from './features/lessons/StudentLessons';
-import TrialLessonsPage from './pages/TrialLessonsPage';
-import TrialQueuePage from './pages/trials/TrialQueuePage';
 import TrialRequestPage from './pages/public/TrialRequestPage';
+import TrialQueuePage from './pages/trials/TrialQueuePage';
+import StudentProfilePage from './pages/students/StudentProfilePage';
 import PackageListLite from './features/packages/PackageList';
-import InvoicesPage from './pages/InvoicesPage';
+import Payments from './features/payments/Payments';
+import ReceiptView from './features/receipts/ReceiptView';
+import TeacherLessons from './features/lessons/TeacherLessons';
+import StudentLessons from './features/lessons/StudentLessons';
+import StudentsByTeacher from './features/students/StudentsByTeacher';
+import MetadataPage from './pages/Metadata';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './auth/AuthProvider';
 
@@ -47,6 +48,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/trial" element={<TrialRequestPage />} />
@@ -161,7 +163,7 @@ export default function App() {
             <Route path="/invoices" element={<Navigate to="/finanzas/facturas" replace />} />
             <Route path="/inventory" element={<Navigate to="/operacion/inventario" replace />} />
             <Route path="/admin" element={<Navigate to="/configuracion/roles-permisos" replace />} />
-            <Route path="/metadata" element={<MetadataPage />} />
+            <Route path="/metadata" element={<Navigate to="/label/metadata" replace />} />
 
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/finance/receipts/:receiptId" element={<ReceiptView />} />

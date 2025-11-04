@@ -9,7 +9,6 @@ import type {
   SubjectDTO,
   TrialAssignPayload,
   TrialPurchasePayload,
-  TrialAvailabilityDTO,
   TrialRequestCreate,
   TrialRequestDTO,
   TrialSchedulePayload,
