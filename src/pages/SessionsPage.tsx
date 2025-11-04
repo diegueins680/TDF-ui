@@ -30,13 +30,14 @@ import {
   Typography,
 } from '@mui/material';
 import { AddCircleOutline, DeleteOutline } from '@mui/icons-material';
-import { Controller, useFieldArray, useForm, type Control, type FieldErrors } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch, type Control, type FieldErrors } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sessions } from '../api/sessions';
 import { Rooms } from '../api/rooms';
-import type { BandChoiceDTO, Page, RoomDTO, SessionCreate, SessionDTO, SessionInputRowPayload, SessionUpdate } from '../api/types';
+import { Inventory } from '../api/inventory';
+import type { AssetDTO, BandChoiceDTO, Page, RoomDTO, SessionCreate, SessionDTO, SessionInputRowPayload, SessionUpdate } from '../api/types';
 
 const STATUS_OPTIONS: Array<{ value: string; label: string; color: 'default' | 'success' | 'warning' | 'info' | 'error' }> = [
   { value: 'InPrep', label: 'En preparación', color: 'info' },
@@ -47,6 +48,32 @@ const STATUS_OPTIONS: Array<{ value: string; label: string; color: 'default' | '
   { value: 'Delivered', label: 'Entregada', color: 'success' },
   { value: 'Closed', label: 'Cerrada', color: 'default' },
 ];
+
+const isMicCategory = (category: string) => {
+  const normalized = category.toLowerCase();
+  return normalized.includes('mic');
+};
+
+const isPreampCategory = (category: string) => {
+  const normalized = category.toLowerCase();
+  return normalized.includes('preamp') || normalized.includes('pre amp') || normalized.includes('preampl');
+};
+
+const normalizeAssetId = (value?: string) => value?.trim() ?? '';
+
+const ensureOptionForCurrentValue = (options: AssetDTO[], currentId: string): AssetDTO[] => {
+  if (!currentId) return options;
+  if (options.some(option => option.assetId === currentId)) return options;
+  return [
+    ...options,
+    {
+      assetId: currentId,
+      name: currentId,
+      category: 'Otro',
+      status: 'Desconocido',
+    },
+  ];
+};
 
 const optionalNumberString = z
   .string()
@@ -315,6 +342,42 @@ type SessionFormFieldsProps = {
 
 function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoading = false, showStatus = false }: SessionFormFieldsProps) {
   const { fields, append, remove } = useFieldArray({ control, name: 'inputListRows' });
+  const watchedInputRows = useWatch({ control, name: 'inputListRows' }) ?? [];
+
+  const inventoryQuery = useQuery<Page<AssetDTO>>({
+    queryKey: ['inventory', 'session-form'],
+    queryFn: () => Inventory.list({ pageSize: 500 }),
+  });
+
+  const inventoryItems = inventoryQuery.data?.items ?? [];
+
+  const micAssets = useMemo(
+    () => inventoryItems.filter(asset => asset.category && isMicCategory(asset.category)),
+    [inventoryItems],
+  );
+
+  const preampAssets = useMemo(
+    () => inventoryItems.filter(asset => asset.category && isPreampCategory(asset.category)),
+    [inventoryItems],
+  );
+
+  const selectedMicIds = useMemo(() => {
+    const ids = new Set<string>();
+    watchedInputRows.forEach(row => {
+      const id = normalizeAssetId(row?.micId);
+      if (id) ids.add(id);
+    });
+    return ids;
+  }, [watchedInputRows]);
+
+  const selectedPreampIds = useMemo(() => {
+    const ids = new Set<string>();
+    watchedInputRows.forEach(row => {
+      const id = normalizeAssetId(row?.preampId);
+      if (id) ids.add(id);
+    });
+    return ids;
+  }, [watchedInputRows]);
 
   return (
     <Stack spacing={3} sx={{ mt: 1 }}>
@@ -593,6 +656,31 @@ function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoa
 
         {fields.map((fieldItem, index) => {
           const rowErrors = errors.inputListRows?.[index];
+          const rowValues = watchedInputRows?.[index];
+          const currentMicId = normalizeAssetId(rowValues?.micId);
+          const currentPreampId = normalizeAssetId(rowValues?.preampId);
+          const micOptions = ensureOptionForCurrentValue(
+            micAssets.filter(asset => asset.assetId === currentMicId || !selectedMicIds.has(asset.assetId)),
+            currentMicId,
+          );
+          const preampOptions = ensureOptionForCurrentValue(
+            preampAssets.filter(asset => asset.assetId === currentPreampId || !selectedPreampIds.has(asset.assetId)),
+            currentPreampId,
+          );
+          const micHelperText = inventoryQuery.isPending
+            ? 'Cargando inventario…'
+            : inventoryQuery.isError
+              ? 'Error cargando inventario'
+              : micOptions.length === 0
+                ? 'No hay micrófonos disponibles'
+                : undefined;
+          const preampHelperText = inventoryQuery.isPending
+            ? 'Cargando inventario…'
+            : inventoryQuery.isError
+              ? 'Error cargando inventario'
+              : preampOptions.length === 0
+                ? 'No hay preamps disponibles'
+                : undefined;
           return (
             <Paper key={fieldItem.id} variant="outlined" sx={{ p: 2 }}>
               <Stack spacing={2}>
@@ -640,14 +728,50 @@ function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoa
                     name={`inputListRows.${index}.micId` as const}
                     control={control}
                     render={({ field }) => (
-                      <TextField {...field} label="Mic (asset id)" fullWidth />
+                      <TextField
+                        {...field}
+                        select
+                        label="Mic"
+                        value={field.value ?? ''}
+                        onChange={(event) => field.onChange(event.target.value)}
+                        SelectProps={{ displayEmpty: true }}
+                        helperText={micHelperText}
+                        fullWidth
+                      >
+                        <MenuItem value="">
+                          <em>Sin asignar</em>
+                        </MenuItem>
+                        {micOptions.map(asset => (
+                          <MenuItem key={asset.assetId} value={asset.assetId}>
+                            {asset.name} ({asset.assetId})
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     )}
                   />
                   <Controller
                     name={`inputListRows.${index}.preampId` as const}
                     control={control}
                     render={({ field }) => (
-                      <TextField {...field} label="Preamp (asset id)" fullWidth />
+                      <TextField
+                        {...field}
+                        select
+                        label="Preamp"
+                        value={field.value ?? ''}
+                        onChange={(event) => field.onChange(event.target.value)}
+                        SelectProps={{ displayEmpty: true }}
+                        helperText={preampHelperText}
+                        fullWidth
+                      >
+                        <MenuItem value="">
+                          <em>Sin asignar</em>
+                        </MenuItem>
+                        {preampOptions.map(asset => (
+                          <MenuItem key={asset.assetId} value={asset.assetId}>
+                            {asset.name} ({asset.assetId})
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     )}
                   />
                 </Stack>
