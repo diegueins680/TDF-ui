@@ -62,6 +62,11 @@ export default function Header({ items, username, onLogout, onShowAbout }: Heade
               Acerca de
             </button>
           )}
+          {username && (
+            <NavLink to="/account/password" className={navClass}>
+              Seguridad
+            </NavLink>
+          )}
           {username && <span className="user-id" aria-label="Signed in user">{username}</span>}
           {onLogout && (
             <button className="btn" onClick={onLogout} type="button">

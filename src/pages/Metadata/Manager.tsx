@@ -61,7 +61,7 @@ export default function MetadataManager() {
         <DataGrid
           rows={rows}
           columns={columns}
-          getRowId={(row) => row.catalog_id}
+          getRowId={(row: MetadataRow) => row.catalog_id}
           disableRowSelectionOnClick
         />
       </div>
