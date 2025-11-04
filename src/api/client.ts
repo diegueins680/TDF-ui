@@ -2,8 +2,10 @@ import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } fro
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
+const normalizedBaseURL = API_BASE.endsWith('/') ? API_BASE : `${API_BASE}/`;
+
 export const client = axios.create({
-  baseURL: API_BASE,
+  baseURL: normalizedBaseURL,
   withCredentials: true,
 });
 
