@@ -35,6 +35,14 @@ function normalizeBaseUrl(base: string) {
   return base.endsWith('/') ? base : `${base}/`;
 }
 
+function stripLeadingSlashes(path: string) {
+  let start = 0;
+  while (start < path.length && path[start] === '/') {
+    start += 1;
+  }
+  return start > 0 ? path.slice(start) : path;
+}
+
 function buildPath(template: string, pathParams?: Record<string, Primitive | null | undefined>) {
   if (!pathParams) {
     return template;
@@ -64,9 +72,9 @@ function appendQuery(searchParams: URLSearchParams, key: string, value: QueryVal
 function resolveUrl(path: string, pathParams?: Record<string, Primitive | null | undefined>, query?: Record<string, QueryValue>) {
   const pathWithParams = buildPath(path, pathParams ?? undefined);
   const base = normalizeBaseUrl(HQ_API_BASE);
-  const absolute = isAbsoluteUrl(pathWithParams)
-    ? pathWithParams
-    : `${base}${pathWithParams.replace(/^\/+/, '')}`;
+  const absolutePath = isAbsoluteUrl(pathWithParams);
+  const trimmedPath = absolutePath ? pathWithParams : stripLeadingSlashes(pathWithParams);
+  const absolute = absolutePath ? trimmedPath : `${base}${trimmedPath}`;
   const url = new URL(absolute);
   if (query && Object.keys(query).length > 0) {
     const params = new URLSearchParams(url.search);
