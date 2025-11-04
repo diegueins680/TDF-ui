@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { api } from '../../api/client';
 
 interface MetadataRow {
   catalog_id: string;
@@ -31,23 +32,22 @@ export default function MetadataManager() {
   );
 
   useEffect(() => {
-    let isMounted = true;
+    let isActive = true;
 
-    fetch('/api/metadata')
-      .then((response) => (response.ok ? response.json() : EMPTY_ROWS))
-      .then((data: MetadataRow[]) => {
-        if (isMounted && Array.isArray(data)) {
+    api<MetadataRow[]>('/api/metadata')
+      .then((data) => {
+        if (isActive && Array.isArray(data)) {
           setRows(data);
         }
       })
       .catch(() => {
-        if (isMounted) {
+        if (isActive) {
           setRows(EMPTY_ROWS);
         }
       });
 
     return () => {
-      isMounted = false;
+      isActive = false;
     };
   }, []);
 
