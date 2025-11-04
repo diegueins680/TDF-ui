@@ -1,6 +1,10 @@
 import * as React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { tdfApi, LessonPackage, cents } from '../../api/client';
+import { cents } from '../../api/client';
+import {
+  useLessonPackagesQuery,
+  useCreateLessonPackageMutation,
+} from '../../api/hq';
+import type { components } from '../../api/generated/lessons-and-receipts';
 import {
   Box,
   Button,
@@ -16,29 +20,47 @@ import {
   Typography,
 } from '@mui/material';
 
-export default function PackageList() {
-  const qc = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['packages-lite'],
-    queryFn: tdfApi.listPackages,
-  });
+type LessonPackage = components['schemas']['LessonPackage'];
+type LessonPackageInput = components['schemas']['LessonPackageInput'];
 
-  const [draft, setDraft] = React.useState<Partial<LessonPackage>>({
+type DraftState = {
+  name: string;
+  lessonsIncluded: number;
+  priceCents: number;
+  currency: string;
+};
+
+function buildDefaultDraft(): DraftState {
+  return {
     name: '',
     lessonsIncluded: 4,
     priceCents: 0,
     currency: 'USD',
+  };
+}
+
+export default function PackageList() {
+  const packagesQuery = useLessonPackagesQuery();
+  const createPackage = useCreateLessonPackageMutation({
+    onSuccess: () => setDraft(buildDefaultDraft()),
   });
 
-  const create = useMutation({
-    mutationFn: () => tdfApi.createPackage(draft),
-    onSuccess: () => {
-      setDraft({ name: '', lessonsIncluded: 4, priceCents: 0, currency: 'USD' });
-      qc.invalidateQueries({ queryKey: ['packages-lite'] });
-    },
-  });
+  const [draft, setDraft] = React.useState<DraftState>(buildDefaultDraft());
 
-  const packages = data ?? [];
+  const packages = (packagesQuery.data ?? []).filter(
+    (pkg: LessonPackage) => pkg.is_active !== false,
+  );
+
+  const handleCreate = () => {
+    const payload: LessonPackageInput = {
+      name: draft.name.trim(),
+      total_lessons: Number(draft.lessonsIncluded ?? 0),
+      price_cents: Number(draft.priceCents ?? 0),
+      currency: draft.currency ?? 'USD',
+      is_active: true,
+    };
+    createPackage.mutate(payload);
+  };
 
   return (
     <Stack spacing={3} p={2}>
@@ -47,36 +69,36 @@ export default function PackageList() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField
             label="Nombre"
-            value={draft.name ?? ''}
+            value={draft.name}
             onChange={(event) => setDraft({ ...draft, name: event.target.value })}
             required
           />
           <TextField
             label="Clases incluidas"
             type="number"
-            value={draft.lessonsIncluded ?? 4}
+            value={draft.lessonsIncluded}
             onChange={(event) => setDraft({ ...draft, lessonsIncluded: Number(event.target.value) })}
             sx={{ width: 180 }}
           />
           <TextField
             label="Precio (centavos)"
             type="number"
-            value={draft.priceCents ?? 0}
+            value={draft.priceCents}
             onChange={(event) => setDraft({ ...draft, priceCents: Number(event.target.value) })}
             sx={{ width: 200 }}
           />
           <TextField
             label="Moneda"
-            value={draft.currency ?? 'USD'}
+            value={draft.currency}
             onChange={(event) => setDraft({ ...draft, currency: event.target.value })}
             sx={{ width: 140 }}
           />
           <Button
             variant="contained"
-            onClick={() => create.mutate()}
-            disabled={create.isPending || !(draft.name ?? '').trim()}
+            onClick={handleCreate}
+            disabled={createPackage.isPending || !draft.name.trim()}
           >
-            {create.isPending ? 'Guardando…' : 'Crear'}
+            {createPackage.isPending ? 'Guardando…' : 'Crear'}
           </Button>
         </Stack>
       </Box>
@@ -90,31 +112,33 @@ export default function PackageList() {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Clases</TableCell>
                 <TableCell>Precio</TableCell>
+                <TableCell>Estado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {isLoading && (
+              {packagesQuery.isLoading && (
                 <TableRow>
-                  <TableCell colSpan={3}>Cargando…</TableCell>
+                  <TableCell colSpan={4}>Cargando…</TableCell>
                 </TableRow>
               )}
-              {isError && (
+              {packagesQuery.isError && (
                 <TableRow>
-                  <TableCell colSpan={3} sx={{ color: 'error.main' }}>
-                    {(error as Error).message}
+                  <TableCell colSpan={4} sx={{ color: 'error.main' }}>
+                    {(packagesQuery.error as Error).message}
                   </TableCell>
                 </TableRow>
               )}
               {packages.map(pkg => (
                 <TableRow key={pkg.id}>
                   <TableCell>{pkg.name}</TableCell>
-                  <TableCell>{pkg.lessonsIncluded}</TableCell>
-                  <TableCell>{cents(pkg.priceCents ?? 0, pkg.currency ?? 'USD')}</TableCell>
+                  <TableCell>{pkg.total_lessons ?? '—'}</TableCell>
+                  <TableCell>{cents(pkg.price?.amount_cents ?? 0, pkg.price?.currency ?? 'USD')}</TableCell>
+                  <TableCell>{pkg.is_active ? 'Activo' : 'Inactivo'}</TableCell>
                 </TableRow>
               ))}
-              {!isLoading && !isError && packages.length === 0 && (
+              {!packagesQuery.isLoading && !packagesQuery.isError && packages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} sx={{ color: 'text.secondary' }}>
+                  <TableCell colSpan={4} sx={{ color: 'text.secondary' }}>
                     No hay paquetes registrados todavía.
                   </TableCell>
                 </TableRow>

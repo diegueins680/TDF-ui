@@ -1,7 +1,6 @@
-import * as React from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { tdfApi } from '../../api/client';
+import { useLessonsQuery, useStudentsQuery } from '../../api/hq';
 import {
   Box,
   List,
@@ -15,27 +14,46 @@ type TeacherStudent = { id: string; name: string; email?: string };
 
 export default function StudentsByTeacher() {
   const { teacherId } = useParams<{ teacherId: string }>();
-  const query = useQuery({
-    queryKey: ['students-by-teacher', teacherId],
-    queryFn: () => tdfApi.studentsByTeacher(teacherId!),
-    enabled: Boolean(teacherId),
-  });
+  const lessonsQuery = useLessonsQuery(teacherId ? { teacher_id: teacherId } : undefined);
+  const studentsQuery = useStudentsQuery();
 
-  const students = query.data ?? [];
+  const students = useMemo(() => {
+    if (!teacherId) return [];
+    const lessons = lessonsQuery.data ?? [];
+    const studentIds = Array.from(new Set(lessons.map(lesson => lesson.student_id).filter(Boolean))) as string[];
+    if (studentIds.length === 0) {
+      return [] as TeacherStudent[];
+    }
+    const studentDirectory = new Map(
+      (studentsQuery.data ?? []).map(student => [student.id, student]),
+    );
+    return studentIds.map<TeacherStudent>((id) => {
+      const found = studentDirectory.get(id);
+      return {
+        id,
+        name: found?.name ?? `Estudiante #${id}`,
+        email: found?.email ?? undefined,
+      };
+    });
+  }, [teacherId, lessonsQuery.data, studentsQuery.data]);
+
+  const isLoading = lessonsQuery.isLoading || studentsQuery.isLoading;
+  const isError = lessonsQuery.isError || studentsQuery.isError;
+  const error = (lessonsQuery.error ?? studentsQuery.error) as Error | undefined;
 
   return (
     <Box p={2}>
       <Typography variant="h5" mb={2}>Estudiantes asignados al profesor #{teacherId}</Typography>
       <Paper>
-        {query.isLoading && (
+        {isLoading && (
           <Typography sx={{ p: 2 }}>Cargando…</Typography>
         )}
-        {query.isError && (
+        {isError && (
           <Typography sx={{ p: 2 }} color="error">
-            {(query.error as Error).message}
+            {error?.message ?? 'No se pudo cargar la información.'}
           </Typography>
         )}
-        {!query.isLoading && !query.isError && students.length === 0 && (
+        {!isLoading && !isError && students.length === 0 && (
           <Typography sx={{ p: 2 }} color="text.secondary">
             No hay estudiantes registrados para este profesor.
           </Typography>
