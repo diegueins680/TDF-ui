@@ -41,6 +41,7 @@ const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
     'Staff': '/bar/staff'
   },
   'Operación': {
+    'Calendario DOMO': '/calendar',
     'Reservas de equipo': '/operacion/reservas-equipo',
     'Paquetes': '/operacion/paquetes'
   },

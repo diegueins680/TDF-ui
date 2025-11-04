@@ -129,6 +129,7 @@ export default function App() {
 
             <Route path="/operacion" element={<Outlet />}>
               <Route index element={<Navigate to="inventario" replace />} />
+              <Route path="calendario-domo" element={<CalendarPage />} />
               <Route path="inventario" element={<InventoryPage />} />
               <Route path="reservas-equipo" element={<Placeholder title="Operación · Reservas de equipo" />} />
               <Route path="mantenimiento" element={<Placeholder title="Operación · Mantenimiento" />} />
