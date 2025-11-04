@@ -29,6 +29,7 @@ import ReceiptView from './features/receipts/ReceiptView';
 import TeacherLessons from './features/lessons/TeacherLessons';
 import StudentLessons from './features/lessons/StudentLessons';
 import StudentsByTeacher from './features/students/StudentsByTeacher';
+import MetadataPage from './pages/Metadata';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './auth/AuthProvider';
 
@@ -79,6 +80,7 @@ export default function App() {
               <Route path="releases" element={<Placeholder title="Label · Releases" />} />
               <Route path="tracks" element={<Placeholder title="Label · Tracks" />} />
               <Route path="assets" element={<Placeholder title="Label · Assets" />} />
+              <Route path="metadata" element={<MetadataPage />} />
               <Route path="contratos" element={<Placeholder title="Label · Contratos" />} />
               <Route path="regalias" element={<Placeholder title="Label · Regalías" />} />
               <Route path="marketing" element={<Placeholder title="Label · Marketing" />} />
@@ -161,6 +163,7 @@ export default function App() {
             <Route path="/invoices" element={<Navigate to="/finanzas/facturas" replace />} />
             <Route path="/inventory" element={<Navigate to="/operacion/inventario" replace />} />
             <Route path="/admin" element={<Navigate to="/configuracion/roles-permisos" replace />} />
+            <Route path="/metadata" element={<Navigate to="/label/metadata" replace />} />
 
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/finance/receipts/:receiptId" element={<ReceiptView />} />
