@@ -1,7 +1,6 @@
-import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { tdfApi } from '../../api/client';
+import { useMemo } from 'react';
+import { useLessonsQuery } from '../../api/hq';
 import {
   Box,
   Paper,
@@ -16,11 +15,9 @@ import {
 
 export default function TeacherLessons() {
   const { teacherId } = useParams<{ teacherId: string }>();
-  const query = useQuery({
-    queryKey: ['teacher-lessons', teacherId],
-    queryFn: () => tdfApi.lessonsByTeacher(teacherId!),
-    enabled: Boolean(teacherId),
-  });
+  const lessonsQuery = useLessonsQuery(teacherId ? { teacher_id: teacherId } : undefined);
+
+  const lessons = useMemo(() => lessonsQuery.data ?? [], [lessonsQuery.data]);
 
   return (
     <Box p={2}>
@@ -31,33 +28,49 @@ export default function TeacherLessons() {
             <TableRow>
               <TableCell>ID</TableCell>
               <TableCell>Estudiante</TableCell>
-              <TableCell>Fecha</TableCell>
+              <TableCell>Inicio</TableCell>
+              <TableCell>Fin</TableCell>
               <TableCell align="right">Duración (min)</TableCell>
-              <TableCell>Tema</TableCell>
+              <TableCell>Notas</TableCell>
               <TableCell>Estado</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {query.isLoading && (
-              <TableRow><TableCell colSpan={6}>Cargando…</TableCell></TableRow>
+            {lessonsQuery.isLoading && (
+              <TableRow><TableCell colSpan={7}>Cargando…</TableCell></TableRow>
             )}
-            {query.isError && (
+            {lessonsQuery.isError && (
               <TableRow>
-                <TableCell colSpan={6} sx={{ color: 'error.main' }}>
-                  {(query.error as Error).message}
+                <TableCell colSpan={7} sx={{ color: 'error.main' }}>
+                  {(lessonsQuery.error as Error).message}
                 </TableCell>
               </TableRow>
             )}
-            {query.data?.map(lesson => (
-              <TableRow key={lesson.id}>
-                <TableCell>{lesson.id}</TableCell>
-                <TableCell>{lesson.studentId}</TableCell>
-                <TableCell>{new Date(lesson.scheduledAt).toLocaleString()}</TableCell>
-                <TableCell align="right">{lesson.durationMin}</TableCell>
-                <TableCell>{lesson.topic ?? '—'}</TableCell>
-                <TableCell>{lesson.status ?? 'SCHEDULED'}</TableCell>
+            {lessons.map(lesson => {
+              const start = lesson.start_at ? new Date(lesson.start_at) : null;
+              const end = lesson.end_at ? new Date(lesson.end_at) : null;
+              const duration =
+                start && end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000)) : null;
+
+              return (
+                <TableRow key={lesson.id}>
+                  <TableCell>{lesson.id}</TableCell>
+                  <TableCell>{lesson.student_id ?? '—'}</TableCell>
+                  <TableCell>{start ? start.toLocaleString() : '—'}</TableCell>
+                  <TableCell>{end ? end.toLocaleString() : '—'}</TableCell>
+                  <TableCell align="right">{duration ?? '—'}</TableCell>
+                  <TableCell>{lesson.notes ?? '—'}</TableCell>
+                  <TableCell sx={{ textTransform: 'capitalize' }}>{lesson.status ?? 'scheduled'}</TableCell>
+                </TableRow>
+              );
+            })}
+            {!lessonsQuery.isLoading && !lessonsQuery.isError && lessons.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} sx={{ color: 'text.secondary' }}>
+                  No se encontraron clases para este profesor.
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

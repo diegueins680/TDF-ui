@@ -145,41 +145,6 @@ export const del = <T>(path: string) => request<T>({ url: resolveUrl(path), meth
 
 export const apiClient = { get, post, put, patch, delete: del };
 
-export type LessonPackage = {
-  id: string;
-  name: string;
-  lessonsIncluded: number;
-  priceCents: number;
-  currency: string;
-  teacherId?: string | null;
-  studentId?: string | null;
-  expiresAt?: string | null;
-  createdAt?: string;
-};
-
-export type Lesson = {
-  id: string;
-  teacherId: string;
-  studentId: string;
-  scheduledAt: string;
-  durationMin: number;
-  topic?: string;
-  materialUrl?: string | null;
-  packageId?: string | null;
-  status?: 'SCHEDULED' | 'DONE' | 'CANCELLED';
-};
-
-export type Payment = {
-  id: string;
-  packageId: string;
-  studentId: string;
-  amountCents: number;
-  currency: string;
-  paidAt: string;
-  method?: string;
-};
-
-
 export function cents(amountCents: number, currency: string) {
   const amount = (amountCents ?? 0) / 100;
   try {
@@ -192,13 +157,3 @@ export function cents(amountCents: number, currency: string) {
     return `${amount.toFixed(2)} ${currency}`;
   }
 }
-
-export const tdfApi = {
-  listPackages: () => get<LessonPackage[]>('/packages'),
-  createPackage: (data: Partial<LessonPackage>) => post<LessonPackage>('/packages', data),
-  lessonsByTeacher: (teacherId: string) => get<Lesson[]>(`/teachers/${teacherId}/lessons`),
-  lessonsByStudent: (studentId: string) => get<Lesson[]>(`/students/${studentId}/lessons`),
-  studentsByTeacher: (teacherId: string) =>
-    get<Array<{ id: string; name: string; email?: string }>>(`/teachers/${teacherId}/students`),
-  listPayments: () => get<Payment[]>('/payments'),
-};
