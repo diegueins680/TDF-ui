@@ -20,6 +20,7 @@ export type ResetPasswordPayload = {
 };
 
 export type ChangePasswordPayload = {
+  username: string;
   currentPassword: string;
   newPassword: string;
 };
