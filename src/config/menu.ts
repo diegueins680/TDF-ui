@@ -19,7 +19,7 @@ export const topLevel = [
 export const submenus: Record<string, string[]> = {
   "CRM": ["Contactos","Empresas","Leads"],
   "Estudio": ["Calendario","Salas y recursos","Órdenes","Pipelines","Reportes"],
-  "Label": ["Artistas","Proyectos","Releases","Tracks y assets","Contratos","Regalías","Marketing"],
+  "Label": ["Artistas","Proyectos","Releases","Tracks","Assets","Contratos","Regalías","Marketing"],
   "Eventos": ["Agenda","Fechas y tours","Venues","Staff","Presupuestos","Post-mortem"],
   "Escuela": ["Profesores","Clases","Trial Lessons","Trial Queue","Programas","Cursos","Cohortes","Estudiantes","Inscripciones","Pagos"],
   "Finanzas": ["Cotizaciones","Facturas","Cobros","Regalías"],
@@ -35,7 +35,7 @@ export const visibilityByRole: Record<Role, (string | "*")[]> = {
   booker: ["Estudio","CRM","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones","Bar"],
   ingeniero: ["Estudio","Operación","CRM","Label"],
   productor: ["Estudio","Label","Eventos","CRM","Bar"],
-  artista: ["Label.Contratos","Label.Releases","Label.Tracks y assets","Label.Regalías","Estudio.Calendario","Eventos.Fechas y tours"],
+  artista: ["Label.Contratos","Label.Releases","Label.Tracks","Label.Assets","Label.Regalías","Estudio.Calendario","Eventos.Fechas y tours"],
   profesor: ["Escuela","Estudio.Calendario","CRM"],
   estudiante: ["Escuela.Cursos","Escuela.Inscripciones","Escuela.Pagos"],
   promotor: ["Eventos","CRM","Label.Artistas","Operación.Reservas de equipo","Bar"]

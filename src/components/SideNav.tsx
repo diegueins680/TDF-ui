@@ -25,7 +25,7 @@ const MODULE_TO_PATH: Record<string, string> = {
 
 const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
   'Estudio': { 'Salas y recursos': '/estudio/salas', 'Órdenes': '/estudio/ordenes' },
-  'Label': { 'Tracks y assets': '/label/tracks' },
+  'Label': { 'Tracks': '/label/tracks', 'Assets': '/label/assets' },
   'Eventos': { 'Fechas y tours': '/eventos/fechas-y-tours', 'Post-mortem': '/eventos/post-mortem' },
   'Escuela': {
     'Profesores': '/escuela/profesores',
@@ -178,20 +178,21 @@ export default function SideNav({ collapsed, onToggle, id }: SideNavProps) {
             </div>
             {subs.length > 0 && (
               <ul id={submenuId} className="side-nav__submenu" hidden={!expanded}>
-                {subs.map((label) => {
-                  const override = SUBPATH_OVERRIDES[moduleName]?.[label];
-                  const href = override ?? `${basePath}/${slugify(label)}`;
-                  return (
-                    <li key={label}>
-                      <NavLink
-                        to={href}
-                        className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
-                      >
-                        {label}
-                      </NavLink>
-                    </li>
-                  );
-                })}
+                {!isCollapsed && expanded &&
+                  subs.map((label) => {
+                    const override = SUBPATH_OVERRIDES[moduleName]?.[label];
+                    const href = override ?? `${basePath}/${slugify(label)}`;
+                    return (
+                      <li key={label}>
+                        <NavLink
+                          to={href}
+                          className={({ isActive }) => `side-nav__sublink${isActive ? ' is-active' : ''}`}
+                        >
+                          {label}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
               </ul>
             )}
           </div>
