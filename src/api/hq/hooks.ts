@@ -85,14 +85,14 @@ function withInvalidate<TData, TVariables>(
 export function useTeachersQuery() {
   return useQuery({
     queryKey: hqKeys.teachers,
-    queryFn: () => unwrap(hqClient.GET('/api/teachers')),
+    queryFn: () => unwrap(hqClient.GET<Teacher[]>('/api/teachers')),
   });
 }
 
 export function useTeacherQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.teacher(id) : ['hq', 'teachers', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/teachers/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Teacher>('/api/teachers/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -100,7 +100,7 @@ export function useTeacherQuery(id: IdParam | null | undefined) {
 export function useCreateTeacherMutation(options?: UseMutationOptions<Teacher, Error, TeacherInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: TeacherInput) => unwrapRequired(hqClient.POST('/api/teachers', { body: input })),
+    mutationFn: (input: TeacherInput) => unwrapRequired(hqClient.POST<Teacher>('/api/teachers', { body: input })),
     ...withInvalidate(queryClient, hqKeys.teachers, options),
   });
 }
@@ -109,7 +109,7 @@ export function useUpdateTeacherMutation(id: IdParam, options?: UseMutationOptio
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: TeacherInput) =>
-      unwrapRequired(hqClient.PATCH('/api/teachers/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<Teacher>('/api/teachers/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.teachers, hqKeys.teacher(id)], options),
   });
 }
@@ -125,14 +125,14 @@ export function useDeleteTeacherMutation(id: IdParam, options?: UseMutationOptio
 export function useStudentsQuery() {
   return useQuery({
     queryKey: hqKeys.students,
-    queryFn: () => unwrap(hqClient.GET('/api/students')),
+    queryFn: () => unwrap(hqClient.GET<Student[]>('/api/students')),
   });
 }
 
 export function useStudentQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.student(id) : ['hq', 'students', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/students/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Student>('/api/students/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -140,7 +140,7 @@ export function useStudentQuery(id: IdParam | null | undefined) {
 export function useCreateStudentMutation(options?: UseMutationOptions<Student, Error, StudentInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: StudentInput) => unwrapRequired(hqClient.POST('/api/students', { body: input })),
+    mutationFn: (input: StudentInput) => unwrapRequired(hqClient.POST<Student>('/api/students', { body: input })),
     ...withInvalidate(queryClient, hqKeys.students, options),
   });
 }
@@ -149,7 +149,7 @@ export function useUpdateStudentMutation(id: IdParam, options?: UseMutationOptio
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: StudentInput) =>
-      unwrapRequired(hqClient.PATCH('/api/students/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<Student>('/api/students/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.students, hqKeys.student(id)], options),
   });
 }
@@ -165,14 +165,14 @@ export function useDeleteStudentMutation(id: IdParam, options?: UseMutationOptio
 export function useLessonPackagesQuery() {
   return useQuery({
     queryKey: hqKeys.packages,
-    queryFn: () => unwrap(hqClient.GET('/api/packages')),
+    queryFn: () => unwrap(hqClient.GET<LessonPackage[]>('/api/packages')),
   });
 }
 
 export function useLessonPackageQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.package(id) : ['hq', 'packages', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/packages/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<LessonPackage>('/api/packages/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -180,7 +180,7 @@ export function useLessonPackageQuery(id: IdParam | null | undefined) {
 export function useCreateLessonPackageMutation(options?: UseMutationOptions<LessonPackage, Error, LessonPackageInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: LessonPackageInput) => unwrapRequired(hqClient.POST('/api/packages', { body: input })),
+    mutationFn: (input: LessonPackageInput) => unwrapRequired(hqClient.POST<LessonPackage>('/api/packages', { body: input })),
     ...withInvalidate(queryClient, hqKeys.packages, options),
   });
 }
@@ -192,7 +192,7 @@ export function useUpdateLessonPackageMutation(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: LessonPackageInput) =>
-      unwrapRequired(hqClient.PATCH('/api/packages/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<LessonPackage>('/api/packages/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.packages, hqKeys.package(id)], options),
   });
 }
@@ -208,14 +208,14 @@ export function useArchiveLessonPackageMutation(id: IdParam, options?: UseMutati
 export function useEnrollmentsQuery() {
   return useQuery({
     queryKey: hqKeys.enrollments,
-    queryFn: () => unwrap(hqClient.GET('/api/enrollments')),
+    queryFn: () => unwrap(hqClient.GET<Enrollment[]>('/api/enrollments')),
   });
 }
 
 export function useEnrollmentQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.enrollment(id) : ['hq', 'enrollments', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/enrollments/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Enrollment>('/api/enrollments/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -223,7 +223,7 @@ export function useEnrollmentQuery(id: IdParam | null | undefined) {
 export function useCreateEnrollmentMutation(options?: UseMutationOptions<Enrollment, Error, EnrollmentInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: EnrollmentInput) => unwrapRequired(hqClient.POST('/api/enrollments', { body: input })),
+    mutationFn: (input: EnrollmentInput) => unwrapRequired(hqClient.POST<Enrollment>('/api/enrollments', { body: input })),
     ...withInvalidate(queryClient, hqKeys.enrollments, options),
   });
 }
@@ -232,7 +232,7 @@ export function useUpdateEnrollmentMutation(id: IdParam, options?: UseMutationOp
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: EnrollmentUpdate) =>
-      unwrapRequired(hqClient.PATCH('/api/enrollments/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<Enrollment>('/api/enrollments/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.enrollments, hqKeys.enrollment(id)], options),
   });
 }
@@ -251,9 +251,12 @@ export function useLessonsQuery(filters?: LessonsQuery) {
     queryKey: hqKeys.lessons(sanitizedFilters),
     queryFn: () =>
       unwrap(
-        hqClient.GET('/api/lessons', {
-          params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
-        }),
+        hqClient.GET<Lesson[]>(
+          '/api/lessons',
+          {
+            params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
+          },
+        ),
       ),
   });
 }
@@ -261,7 +264,7 @@ export function useLessonsQuery(filters?: LessonsQuery) {
 export function useLessonQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.lesson(id) : ['hq', 'lessons', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/lessons/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Lesson>('/api/lessons/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -269,7 +272,7 @@ export function useLessonQuery(id: IdParam | null | undefined) {
 export function useCreateLessonMutation(options?: UseMutationOptions<Lesson, Error, LessonInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: LessonInput) => unwrapRequired(hqClient.POST('/api/lessons', { body: input })),
+    mutationFn: (input: LessonInput) => unwrapRequired(hqClient.POST<Lesson>('/api/lessons', { body: input })),
     ...withInvalidate(queryClient, [hqKeys.lessonsRoot, hqKeys.enrollments], options),
   });
 }
@@ -278,7 +281,7 @@ export function useUpdateLessonMutation(id: IdParam, options?: UseMutationOption
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: LessonUpdate) =>
-      unwrapRequired(hqClient.PATCH('/api/lessons/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<Lesson>('/api/lessons/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.lessonsRoot, hqKeys.lesson(id)], options),
   });
 }
@@ -296,9 +299,12 @@ export function useLessonMaterialsQuery(lessonId: IdParam | null | undefined) {
     queryKey: lessonId ? hqKeys.lessonMaterials(lessonId) : ['hq', 'lessons', 'materials', 'empty'],
     queryFn: () =>
       unwrap(
-        hqClient.GET('/api/lessons/{id}/materials', {
-          params: { path: { id: lessonId as IdParam } },
-        }),
+        hqClient.GET<LessonMaterial[]>(
+          '/api/lessons/{id}/materials',
+          {
+            params: { path: { id: lessonId as IdParam } },
+          },
+        ),
       ),
     enabled: Boolean(lessonId),
   });
@@ -312,10 +318,13 @@ export function useCreateLessonMaterialMutation(
   return useMutation({
     mutationFn: (input: LessonMaterialInput) =>
       unwrapRequired(
-        hqClient.POST('/api/lessons/{id}/materials', {
-          params: { path: { id: lessonId } },
-          body: input,
-        }),
+        hqClient.POST<LessonMaterial>(
+          '/api/lessons/{id}/materials',
+          {
+            params: { path: { id: lessonId } },
+            body: input,
+          },
+        ),
       ),
     ...withInvalidate(queryClient, hqKeys.lessonMaterials(lessonId), options),
   });
@@ -327,9 +336,12 @@ export function usePaymentsQuery(filters?: PaymentsQuery) {
     queryKey: hqKeys.payments(sanitizedFilters),
     queryFn: () =>
       unwrap(
-        hqClient.GET('/api/payments', {
-          params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
-        }),
+        hqClient.GET<Payment[]>(
+          '/api/payments',
+          {
+            params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
+          },
+        ),
       ),
   });
 }
@@ -337,7 +349,7 @@ export function usePaymentsQuery(filters?: PaymentsQuery) {
 export function usePaymentQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.payment(id) : ['hq', 'payments', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/payments/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Payment>('/api/payments/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -345,7 +357,7 @@ export function usePaymentQuery(id: IdParam | null | undefined) {
 export function useCreatePaymentMutation(options?: UseMutationOptions<Payment, Error, PaymentInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: PaymentInput) => unwrapRequired(hqClient.POST('/api/payments', { body: input })),
+    mutationFn: (input: PaymentInput) => unwrapRequired(hqClient.POST<Payment>('/api/payments', { body: input })),
     ...withInvalidate(queryClient, [hqKeys.paymentsRoot, hqKeys.enrollments], options),
   });
 }
@@ -354,7 +366,7 @@ export function useUpdatePaymentMutation(id: IdParam, options?: UseMutationOptio
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: PaymentUpdate) =>
-      unwrapRequired(hqClient.PATCH('/api/payments/{id}', { params: { path: { id } }, body: input })),
+      unwrapRequired(hqClient.PATCH<Payment>('/api/payments/{id}', { params: { path: { id } }, body: input })),
     ...withInvalidate(queryClient, [hqKeys.paymentsRoot, hqKeys.payment(id)], options),
   });
 }
@@ -373,9 +385,12 @@ export function useReceiptsQuery(filters?: ReceiptsQuery) {
     queryKey: hqKeys.receipts(sanitizedFilters),
     queryFn: () =>
       unwrap(
-        hqClient.GET('/api/receipts', {
-          params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
-        }),
+        hqClient.GET<Receipt[]>(
+          '/api/receipts',
+          {
+            params: Object.keys(sanitizedFilters).length ? { query: sanitizedFilters } : undefined,
+          },
+        ),
       ),
   });
 }
@@ -383,7 +398,7 @@ export function useReceiptsQuery(filters?: ReceiptsQuery) {
 export function useReceiptQuery(id: IdParam | null | undefined) {
   return useQuery({
     queryKey: id ? hqKeys.receipt(id) : ['hq', 'receipts', 'detail', 'empty'],
-    queryFn: () => unwrap(hqClient.GET('/api/receipts/{id}', { params: { path: { id: id as IdParam } } })),
+    queryFn: () => unwrap(hqClient.GET<Receipt>('/api/receipts/{id}', { params: { path: { id: id as IdParam } } })),
     enabled: Boolean(id),
   });
 }
@@ -393,7 +408,7 @@ export function useReceiptPdfQuery(id: IdParam | null | undefined) {
     queryKey: id ? hqKeys.receiptPdf(id) : ['hq', 'receipts', 'pdf', 'empty'],
     queryFn: () =>
       unwrapRequired(
-        hqClient.GET('/api/receipts/{id}/pdf', {
+        hqClient.GET<Blob>('/api/receipts/{id}/pdf', {
           params: { path: { id: id as IdParam } },
           parseAs: 'blob',
         }),
@@ -405,7 +420,7 @@ export function useReceiptPdfQuery(id: IdParam | null | undefined) {
 export function useCreateReceiptMutation(options?: UseMutationOptions<Receipt, Error, ReceiptInput>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: ReceiptInput) => unwrapRequired(hqClient.POST('/api/receipts', { body: input })),
+    mutationFn: (input: ReceiptInput) => unwrapRequired(hqClient.POST<Receipt>('/api/receipts', { body: input })),
     ...withInvalidate(queryClient, [hqKeys.receiptsRoot, hqKeys.paymentsRoot, hqKeys.enrollments], options),
   });
 }
