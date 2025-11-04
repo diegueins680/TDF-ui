@@ -22,9 +22,7 @@ import { Invoices } from '../api/invoices';
 import { listByParty as listPipelinesByParty } from '../api/pipelines';
 import { buildNormalizedNames, isPipelineCardRelated } from '../features/pipelines/pipelineFilters';
 import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
-
-const roleValues = ['Admin','Manager','Engineer','Teacher','Reception','Accounting','Artist','Student','Vendor','ReadOnly','Customer'] as const;
-const ROLE_OPTIONS: { value: RoleKey; label: string }[] = roleValues.map(value => ({ value, label: value }));
+import { ROLE_OPTIONS, ROLE_VALUES } from '../constants/roles';
 
 const createSchema = z.object({
   cDisplayName: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -37,7 +35,7 @@ const createSchema = z.object({
   cInstagram: z.string().optional(),
   cEmergencyContact: z.string().optional(),
   cNotes: z.string().optional(),
-  cRoles: z.array(z.enum(roleValues)).default([])
+  cRoles: z.array(z.enum(ROLE_VALUES)).default([])
 });
 
 type CreateForm = z.infer<typeof createSchema>;
