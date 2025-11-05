@@ -10,12 +10,14 @@ import {
   Alert, Box, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
-  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip
+  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip, Snackbar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SchoolIcon from '@mui/icons-material/School';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
@@ -23,6 +25,7 @@ import { listByParty as listPipelinesByParty } from '../api/pipelines';
 import { buildNormalizedNames, isPipelineCardRelated } from '../features/pipelines/pipelineFilters';
 import { usePipelineCardsForParty } from '../features/pipelines/pipelineStore';
 import { ROLE_OPTIONS, ROLE_VALUES } from '../constants/roles';
+import { convertPartyToStudent } from '../utils/partyRoleHelpers';
 
 const createSchema = z.object({
   cDisplayName: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -853,12 +856,25 @@ function EditPartyDialog({
 }
 
 export default function PartiesPage() {
+  const qc = useQueryClient();
   const { data = [], isLoading, error } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
   const [createOpen, setCreateOpen] = useState(false);
   const [bandOpen, setBandOpen] = useState(false);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
   const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
+  const [snackbar, setSnackbar] = useState<string | null>(null);
+
+  const convertToStudentMutation = useMutation({
+    mutationFn: (party: PartyDTO) => convertPartyToStudent(party),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['parties'] });
+      setSnackbar(`Convertido a estudiante (Student ID: ${result.studentId || 'N/A'})`);
+    },
+    onError: (err: Error) => {
+      setSnackbar(`Error: ${err.message}`);
+    },
+  });
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
     { header: 'Nombre', accessorKey: 'displayName' },
@@ -867,17 +883,37 @@ export default function PartiesPage() {
     { header: 'Instagram', accessorKey: 'instagram' },
     {
       header: 'Acciones', cell: ({ row }) => (
-        <IconButton
-          onClick={(event) => {
-            event.stopPropagation();
-            setEditing(row.original);
-          }}
-        >
-          <EditIcon />
-        </IconButton>
+        <Stack direction="row" spacing={0.5}>
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              onClick={(event) => {
+                event.stopPropagation();
+                setEditing(row.original);
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {!row.original.isOrg && (
+            <Tooltip title="Convertir a estudiante">
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (confirm(`¿Convertir a ${row.original.displayName} en estudiante?`)) {
+                    convertToStudentMutation.mutate(row.original);
+                  }
+                }}
+              >
+                <SchoolIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
       )
     }
-  ], []);
+  ], [convertToStudentMutation]);
 
   const table = useReactTable({
     data,
@@ -949,6 +985,13 @@ export default function PartiesPage() {
       {detail && (
         <PartyDetailDialog party={detail} open onClose={() => setDetail(null)} />
       )}
+
+      <Snackbar
+        open={!!snackbar}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(null)}
+        message={snackbar}
+      />
     </>
   );
 }
