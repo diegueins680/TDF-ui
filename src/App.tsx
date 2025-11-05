@@ -111,7 +111,8 @@ export default function App() {
               <Route path="programas" element={<Placeholder title="Escuela · Programas" />} />
               <Route path="cursos" element={<Placeholder title="Escuela · Cursos" />} />
               <Route path="cohortes" element={<Placeholder title="Escuela · Cohortes" />} />
-              <Route path="estudiantes" element={<Placeholder title="Escuela · Estudiantes" />} />
+              <Route path="estudiantes" element={<Placeholder title="Escuela · Estudiantes" description="Lista de estudiantes matriculados. Click en un estudiante para ver su perfil y progreso." />} />
+              <Route path="estudiantes/:id" element={<StudentProfilePage />} />
               <Route path="inscripciones" element={<Placeholder title="Escuela · Inscripciones" />} />
               <Route path="pagos" element={<Placeholder title="Escuela · Pagos" />} />
             </Route>
@@ -172,13 +173,16 @@ export default function App() {
             <Route path="/admin" element={<Navigate to="/configuracion/roles-permisos" replace />} />
             <Route path="/metadata" element={<Navigate to="/label/metadata" replace />} />
 
-            <Route path="/students/:id" element={<StudentProfilePage />} />
+            {/* Legacy routes for backward compatibility */}
+            <Route path="/students/:id" element={<Navigate to="/escuela/estudiantes/:id" replace />} />
+            <Route path="/students/:studentId/lessons" element={<StudentLessons />} />
+            
+            {/* Feature routes */}
             <Route path="/finance/receipts/:receiptId" element={<ReceiptView />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/packages/lite" element={<PackageListLite />} />
             <Route path="/teachers/:teacherId/lessons" element={<TeacherLessons />} />
             <Route path="/teachers/:teacherId/students" element={<StudentsByTeacher />} />
-            <Route path="/students/:studentId/lessons" element={<StudentLessons />} />
             <Route path="*" element={<Navigate to="/inicio" replace />} />
           </Route>
         </Route>
