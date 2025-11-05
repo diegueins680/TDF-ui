@@ -23,6 +23,7 @@ import SignupPage from './pages/public/SignupPage';
 import TrialRequestPage from './pages/public/TrialRequestPage';
 import TrialQueuePage from './pages/trials/TrialQueuePage';
 import StudentProfilePage from './pages/students/StudentProfilePage';
+import StudentDashboard from './pages/students/StudentDashboard';
 import PackageListLite from './features/packages/PackageList';
 import Payments from './features/payments/Payments';
 import ReceiptView from './features/receipts/ReceiptView';
@@ -106,6 +107,7 @@ export default function App() {
               <Route path="cursos" element={<Placeholder title="Escuela · Cursos" />} />
               <Route path="cohortes" element={<Placeholder title="Escuela · Cohortes" />} />
               <Route path="estudiantes" element={<Placeholder title="Escuela · Estudiantes" />} />
+              <Route path="estudiante/:studentId/dashboard" element={<StudentDashboard />} />
               <Route path="inscripciones" element={<Placeholder title="Escuela · Inscripciones" />} />
               <Route path="pagos" element={<Placeholder title="Escuela · Pagos" />} />
             </Route>
