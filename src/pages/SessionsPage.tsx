@@ -55,8 +55,9 @@ const isMicCategory = (category: string) => {
 };
 
 const isPreampCategory = (category: string) => {
-  const normalized = category.toLowerCase();
-  return normalized.includes('preamp') || normalized.includes('pre amp') || normalized.includes('preampl');
+  const normalized = category.toLowerCase().replace(/[\-/]/g, ' ');
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  return tokens.some(token => token === 'pre' || token.startsWith('preamp') || token.startsWith('preampl'));
 };
 
 const normalizeAssetId = (value?: string) => value?.trim() ?? '';
@@ -734,16 +735,25 @@ function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoa
                         label="Mic"
                         value={field.value ?? ''}
                         onChange={(event) => field.onChange(event.target.value)}
-                        SelectProps={{ displayEmpty: true }}
+                        SelectProps={{
+                          displayEmpty: true,
+                          renderValue: (selected) => {
+                            const value = typeof selected === 'string' ? selected : '';
+                            if (!value) return 'Sin asignar';
+                            const option = micOptions.find(asset => asset.assetId === value);
+                            return option?.name ?? value;
+                          },
+                        }}
+                        InputLabelProps={{ shrink: true }}
                         helperText={micHelperText}
                         fullWidth
                       >
                         <MenuItem value="">
-                          <em>Sin asignar</em>
+                          Sin asignar
                         </MenuItem>
                         {micOptions.map(asset => (
                           <MenuItem key={asset.assetId} value={asset.assetId}>
-                            {asset.name} ({asset.assetId})
+                            {asset.name}
                           </MenuItem>
                         ))}
                       </TextField>
@@ -759,16 +769,25 @@ function SessionFormFields({ control, errors, rooms, bandChoices, bandChoicesLoa
                         label="Preamp"
                         value={field.value ?? ''}
                         onChange={(event) => field.onChange(event.target.value)}
-                        SelectProps={{ displayEmpty: true }}
+                        SelectProps={{
+                          displayEmpty: true,
+                          renderValue: (selected) => {
+                            const value = typeof selected === 'string' ? selected : '';
+                            if (!value) return 'Sin asignar';
+                            const option = preampOptions.find(asset => asset.assetId === value);
+                            return option?.name ?? value;
+                          },
+                        }}
+                        InputLabelProps={{ shrink: true }}
                         helperText={preampHelperText}
                         fullWidth
                       >
                         <MenuItem value="">
-                          <em>Sin asignar</em>
+                          Sin asignar
                         </MenuItem>
                         {preampOptions.map(asset => (
                           <MenuItem key={asset.assetId} value={asset.assetId}>
-                            {asset.name} ({asset.assetId})
+                            {asset.name}
                           </MenuItem>
                         ))}
                       </TextField>
